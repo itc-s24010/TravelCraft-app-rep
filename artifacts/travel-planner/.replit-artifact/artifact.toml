@@ -1,7 +1,7 @@
 kind = "web"
 previewPath = "/"
-title = "旅行計画アプリ"
-description = "旅行プランの作成・管理、交通情報・宿泊情報の登録、予算・支出の追跡、通知設定ができるフルスタック旅行計画アプリ。ユーザー認証付き。"
+title = "旅行計画アプリ (Next.js + Spring Boot)"
+description = "Next.js + Supabase Auth + Spring Boot バックエンドで構築した旅行計画アプリ。旅行プランの作成・管理、交通・宿泊情報の登録、予算・支出追跡、通知設定ができる。"
 version = "1.0.0"
 id = "artifacts/travel-planner"
 router = "path"
@@ -12,16 +12,7 @@ paths = [ "/" ]
 localPort = 24289
 
 [services.development]
-run = "pnpm --filter @workspace/travel-planner run dev"
-
-[services.production]
-build = [ "pnpm", "--filter", "@workspace/travel-planner", "run", "build" ]
-serve = "static"
-publicDir = "artifacts/travel-planner/dist/public"
-
-[[services.production.rewrites]]
-from = "/*"
-to = "/index.html"
+run = "pnpm --filter @workspace/travel-next run dev"
 
 [services.env]
 PORT = "24289"
