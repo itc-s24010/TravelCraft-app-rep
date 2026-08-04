@@ -3,20 +3,33 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Travel planner API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: trips
+    description: Trip plan operations
+  - name: transportation
+    description: Transportation operations
+  - name: accommodation
+    description: Accommodation operations
+  - name: budget
+    description: Budget operations
+  - name: expense
+    description: Expense operations
+  - name: category
+    description: Category operations
+  - name: notification
+    description: Notification operations
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +37,654 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # Trips
+  /trips:
+    get:
+      operationId: listTrips
+      tags: [trips]
+      summary: List trips for the current user
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Trip"
+    post:
+      operationId: createTrip
+      tags: [trips]
+      summary: Create a new trip
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TripInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+
+  /trips/{tripId}:
+    get:
+      operationId: getTrip
+      tags: [trips]
+      summary: Get trip detail
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateTrip
+      tags: [trips]
+      summary: Update trip
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TripUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+    delete:
+      operationId: deleteTrip
+      tags: [trips]
+      summary: Delete trip
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: No content
+
+  /trips/{tripId}/summary:
+    get:
+      operationId: getTripSummary
+      tags: [trips]
+      summary: Get trip summary with budget vs expense totals
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TripSummary"
+
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [trips]
+      summary: Get dashboard stats (upcoming trips, total spent, etc.)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dashboard"
+
+  # Transportation
+  /trips/{tripId}/transportation:
+    get:
+      operationId: listTransportation
+      tags: [transportation]
+      summary: List transportation records for a trip
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transportation"
+    post:
+      operationId: createTransportation
+      tags: [transportation]
+      summary: Add transportation to a trip
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransportationInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transportation"
+
+  /trips/{tripId}/transportation/{transportationId}:
+    get:
+      operationId: getTransportation
+      tags: [transportation]
+      summary: Get transportation detail
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: transportationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transportation"
+    patch:
+      operationId: updateTransportation
+      tags: [transportation]
+      summary: Update transportation
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: transportationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransportationUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transportation"
+    delete:
+      operationId: deleteTransportation
+      tags: [transportation]
+      summary: Delete transportation
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: transportationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: No content
+
+  # Accommodation
+  /trips/{tripId}/accommodation:
+    get:
+      operationId: listAccommodation
+      tags: [accommodation]
+      summary: List accommodations for a trip
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Accommodation"
+    post:
+      operationId: createAccommodation
+      tags: [accommodation]
+      summary: Add accommodation to a trip
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccommodationInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Accommodation"
+
+  /trips/{tripId}/accommodation/{accommodationId}:
+    get:
+      operationId: getAccommodation
+      tags: [accommodation]
+      summary: Get accommodation detail
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: accommodationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Accommodation"
+    patch:
+      operationId: updateAccommodation
+      tags: [accommodation]
+      summary: Update accommodation
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: accommodationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccommodationUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Accommodation"
+    delete:
+      operationId: deleteAccommodation
+      tags: [accommodation]
+      summary: Delete accommodation
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: accommodationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: No content
+
+  # Budget
+  /trips/{tripId}/budget:
+    get:
+      operationId: listBudget
+      tags: [budget]
+      summary: List budgets for a trip
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Budget"
+    post:
+      operationId: createBudget
+      tags: [budget]
+      summary: Create budget for a category
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BudgetInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Budget"
+
+  /trips/{tripId}/budget/{budgetId}:
+    patch:
+      operationId: updateBudget
+      tags: [budget]
+      summary: Update budget
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: budgetId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BudgetUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Budget"
+    delete:
+      operationId: deleteBudget
+      tags: [budget]
+      summary: Delete budget
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: budgetId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: No content
+
+  # Expenses
+  /trips/{tripId}/expenses:
+    get:
+      operationId: listExpenses
+      tags: [expense]
+      summary: List expenses for a trip
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Expense"
+    post:
+      operationId: createExpense
+      tags: [expense]
+      summary: Record an expense
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExpenseInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Expense"
+
+  /trips/{tripId}/expenses/{expenseId}:
+    patch:
+      operationId: updateExpense
+      tags: [expense]
+      summary: Update expense
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: expenseId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExpenseUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Expense"
+    delete:
+      operationId: deleteExpense
+      tags: [expense]
+      summary: Delete expense
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: expenseId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: No content
+
+  # Categories
+  /categories:
+    get:
+      operationId: listCategories
+      tags: [category]
+      summary: List all expense/budget categories
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+
+  # Notifications
+  /trips/{tripId}/notifications:
+    get:
+      operationId: listNotifications
+      tags: [notification]
+      summary: List notifications for a trip
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+    post:
+      operationId: createNotification
+      tags: [notification]
+      summary: Create notification for a trip
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+
+  /trips/{tripId}/notifications/{notificationId}:
+    patch:
+      operationId: updateNotification
+      tags: [notification]
+      summary: Update notification
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: notificationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+    delete:
+      operationId: deleteNotification
+      tags: [notification]
+      summary: Delete notification
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: notificationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: No content
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +695,355 @@ components:
       required:
         - status
 
+    Trip:
+      type: object
+      required: [tripId, userId, title, tripDate, createdAt, updatedAt]
+      properties:
+        tripId:
+          type: integer
+        userId:
+          type: string
+        title:
+          type: string
+        tripDate:
+          type: string
+          format: date
+        memo:
+          type: ["string", "null"]
+        companions:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    TripInput:
+      type: object
+      required: [title, tripDate]
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        tripDate:
+          type: string
+          format: date
+        memo:
+          type: string
+        companions:
+          type: string
+
+    TripUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        tripDate:
+          type: string
+          format: date
+        memo:
+          type: ["string", "null"]
+        companions:
+          type: ["string", "null"]
+
+    TripSummary:
+      type: object
+      required: [tripId, title, tripDate, totalBudget, totalExpense, remaining, categoryBreakdown]
+      properties:
+        tripId:
+          type: integer
+        title:
+          type: string
+        tripDate:
+          type: string
+          format: date
+        totalBudget:
+          type: number
+        totalExpense:
+          type: number
+        remaining:
+          type: number
+        categoryBreakdown:
+          type: array
+          items:
+            $ref: "#/components/schemas/CategoryBudgetExpense"
+
+    CategoryBudgetExpense:
+      type: object
+      required: [categoryId, categoryName, budget, expense]
+      properties:
+        categoryId:
+          type: integer
+        categoryName:
+          type: string
+        budget:
+          type: number
+        expense:
+          type: number
+
+    Dashboard:
+      type: object
+      required: [upcomingTrips, pastTrips, totalTrips, totalExpenseAllTime, recentTrips]
+      properties:
+        upcomingTrips:
+          type: integer
+        pastTrips:
+          type: integer
+        totalTrips:
+          type: integer
+        totalExpenseAllTime:
+          type: number
+        recentTrips:
+          type: array
+          items:
+            $ref: "#/components/schemas/Trip"
+
+    Transportation:
+      type: object
+      required: [transportationId, tripId, transportationType, departurePlace, arrivalPlace, departureTime, arrivalTime, fare]
+      properties:
+        transportationId:
+          type: integer
+        tripId:
+          type: integer
+        transportationType:
+          type: string
+        departurePlace:
+          type: string
+        arrivalPlace:
+          type: string
+        departureTime:
+          type: string
+          format: date-time
+        arrivalTime:
+          type: string
+          format: date-time
+        fare:
+          type: number
+
+    TransportationInput:
+      type: object
+      required: [transportationType, departurePlace, arrivalPlace, departureTime, arrivalTime, fare]
+      properties:
+        transportationType:
+          type: string
+          maxLength: 50
+        departurePlace:
+          type: string
+          maxLength: 100
+        arrivalPlace:
+          type: string
+          maxLength: 100
+        departureTime:
+          type: string
+          format: date-time
+        arrivalTime:
+          type: string
+          format: date-time
+        fare:
+          type: number
+
+    TransportationUpdate:
+      type: object
+      properties:
+        transportationType:
+          type: string
+          maxLength: 50
+        departurePlace:
+          type: string
+          maxLength: 100
+        arrivalPlace:
+          type: string
+          maxLength: 100
+        departureTime:
+          type: string
+          format: date-time
+        arrivalTime:
+          type: string
+          format: date-time
+        fare:
+          type: number
+
+    Accommodation:
+      type: object
+      required: [accommodationId, tripId, accommodationName, address, checkIn, checkOut]
+      properties:
+        accommodationId:
+          type: integer
+        tripId:
+          type: integer
+        accommodationName:
+          type: string
+        address:
+          type: string
+        checkIn:
+          type: string
+          format: date-time
+        checkOut:
+          type: string
+          format: date-time
+        reservationNumber:
+          type: ["string", "null"]
+
+    AccommodationInput:
+      type: object
+      required: [accommodationName, address, checkIn, checkOut]
+      properties:
+        accommodationName:
+          type: string
+          maxLength: 200
+        address:
+          type: string
+          maxLength: 255
+        checkIn:
+          type: string
+          format: date-time
+        checkOut:
+          type: string
+          format: date-time
+        reservationNumber:
+          type: string
+
+    AccommodationUpdate:
+      type: object
+      properties:
+        accommodationName:
+          type: string
+          maxLength: 200
+        address:
+          type: string
+          maxLength: 255
+        checkIn:
+          type: string
+          format: date-time
+        checkOut:
+          type: string
+          format: date-time
+        reservationNumber:
+          type: ["string", "null"]
+
+    Budget:
+      type: object
+      required: [budgetId, tripId, categoryId, categoryName, budgetAmount]
+      properties:
+        budgetId:
+          type: integer
+        tripId:
+          type: integer
+        categoryId:
+          type: integer
+        categoryName:
+          type: string
+        budgetAmount:
+          type: number
+
+    BudgetInput:
+      type: object
+      required: [categoryId, budgetAmount]
+      properties:
+        categoryId:
+          type: integer
+        budgetAmount:
+          type: number
+
+    BudgetUpdate:
+      type: object
+      properties:
+        budgetAmount:
+          type: number
+
+    Expense:
+      type: object
+      required: [expenseId, tripId, categoryId, categoryName, expenseAmount, expenseDate]
+      properties:
+        expenseId:
+          type: integer
+        tripId:
+          type: integer
+        categoryId:
+          type: integer
+        categoryName:
+          type: string
+        expenseAmount:
+          type: number
+        expenseDate:
+          type: string
+          format: date
+        paymentMethod:
+          type: ["string", "null"]
+
+    ExpenseInput:
+      type: object
+      required: [categoryId, expenseAmount, expenseDate]
+      properties:
+        categoryId:
+          type: integer
+        expenseAmount:
+          type: number
+        expenseDate:
+          type: string
+          format: date
+        paymentMethod:
+          type: string
+
+    ExpenseUpdate:
+      type: object
+      properties:
+        categoryId:
+          type: integer
+        expenseAmount:
+          type: number
+        expenseDate:
+          type: string
+          format: date
+        paymentMethod:
+          type: ["string", "null"]
+
+    Category:
+      type: object
+      required: [categoryId, categoryName]
+      properties:
+        categoryId:
+          type: integer
+        categoryName:
+          type: string
+
+    Notification:
+      type: object
+      required: [notificationId, tripId]
+      properties:
+        notificationId:
+          type: integer
+        tripId:
+          type: integer
+        reminder:
+          type: ["string", "null"]
+        notificationDatetime:
+          type: ["string", "null"]
+          format: date-time
+        notificationType:
+          type: ["string", "null"]
+
+    NotificationInput:
+      type: object
+      properties:
+        reminder:
+          type: string
+        notificationDatetime:
+          type: string
+          format: date-time
+        notificationType:
+          type: string
+
+    NotificationUpdate:
+      type: object
+      properties:
+        reminder:
+          type: ["string", "null"]
+        notificationDatetime:
+          type: ["string", "null"]
+          format: date-time
+        notificationType:
+          type: ["string", "null"]
