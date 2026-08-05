@@ -1,20 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getFirebaseAuth } from "@/lib/firebase/client";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
 } from "firebase/auth";
-import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  // If already logged in, go straight to trips
+  useEffect(() => {
+    if (sessionStorage.getItem("__firebase_token")) {
+      window.location.href = "/trips";
+    }
+  }, []);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -29,13 +34,12 @@ export default function LoginPage() {
         await signInWithEmailAndPassword(auth, email, password);
       }
       // Get the Firebase ID token and store it for API calls
-      const auth2 = getFirebaseAuth();
-      const idToken = await auth2.currentUser!.getIdToken();
+      const idToken = await auth.currentUser!.getIdToken();
       sessionStorage.setItem("__firebase_token", idToken);
       // Set session cookie so middleware can detect auth state
       document.cookie = "__session=1; path=/; max-age=604800; SameSite=Lax";
-      router.push("/trips");
-      router.refresh();
+      // Hard redirect so sessionStorage is available immediately on the next page
+      window.location.href = "/trips";
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? "";
       if (code === "auth/email-already-in-use") {

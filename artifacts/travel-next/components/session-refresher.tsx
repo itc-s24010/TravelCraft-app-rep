@@ -1,31 +1,33 @@
 "use client";
 
 import { useEffect } from "react";
-import { onAuthStateChanged, onIdTokenChanged } from "firebase/auth";
 import { getFirebaseAuth } from "@/lib/firebase/client";
+import { storeToken } from "@/lib/api";
 
 /**
- * Refreshes the __session cookie whenever Firebase issues a new ID token.
- * Firebase automatically refreshes the token every ~55 minutes; without this
- * the __session cookie would expire after its original max-age and the
- * middleware would redirect the user to /login.
+ * Silently refreshes the Firebase ID token every 50 minutes so the
+ * sessionStorage token stays fresh (Firebase tokens expire after 1 hour).
+ * Does NOT use onIdTokenChanged — that listener can hang in environments
+ * where IndexedDB is unavailable.
  */
 export function SessionRefresher() {
   useEffect(() => {
-    const auth = getFirebaseAuth();
-
-    // onIdTokenChanged fires on sign-in, sign-out, and every silent token refresh
-    const unsubscribe = onIdTokenChanged(auth, (user) => {
-      if (user) {
-        // Renew the cookie for another 7 days on every token refresh
-        document.cookie = "__session=1; path=/; max-age=604800; SameSite=Lax";
-      } else {
-        // User signed out — clear the cookie immediately
-        document.cookie = "__session=; path=/; max-age=0; SameSite=Lax";
+    const refresh = async () => {
+      try {
+        const auth = getFirebaseAuth();
+        const user = auth.currentUser;
+        if (user) {
+          const token = await user.getIdToken(true);
+          storeToken(token);
+          document.cookie = "__session=1; path=/; max-age=604800; SameSite=Lax";
+        }
+      } catch {
+        // ignore refresh errors
       }
-    });
+    };
 
-    return () => unsubscribe();
+    const id = setInterval(refresh, 50 * 60 * 1000);
+    return () => clearInterval(id);
   }, []);
 
   return null;

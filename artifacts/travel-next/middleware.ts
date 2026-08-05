@@ -4,7 +4,7 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Public paths that don't require authentication
-  const publicPaths = ["/login", "/auth"];
+  const publicPaths = ["/login", "/auth", "/api/logout"];
   const isPublic = publicPaths.some(
     (p) => pathname === p || pathname.startsWith(p + "/")
   );
@@ -12,12 +12,13 @@ export async function middleware(request: NextRequest) {
   // Check for Firebase session cookie set after login
   const session = request.cookies.get("__session")?.value;
 
+  // Only block unauthenticated access to protected routes.
+  // Do NOT redirect /login → /trips here: the cookie may be stale and the
+  // server-side logout route needs /login to be reachable immediately after
+  // clearing the cookie.  The login page itself handles the already-logged-in
+  // case client-side.
   if (!session && !isPublic) {
     return NextResponse.redirect(new URL("/login", request.url));
-  }
-
-  if (session && pathname === "/login") {
-    return NextResponse.redirect(new URL("/trips", request.url));
   }
 
   return NextResponse.next();

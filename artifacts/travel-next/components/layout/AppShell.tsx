@@ -1,20 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { getFirebaseAuth } from "@/lib/firebase/client";
 import { signOut } from "firebase/auth";
+import { signOutAndRedirect } from "@/lib/api";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
 
   async function handleSignOut() {
-    const auth = getFirebaseAuth();
-    await signOut(auth);
-    // Clear session cookie — must match same attributes used when setting it
-    document.cookie = "__session=; path=/; max-age=0; SameSite=Lax";
-    // Hard redirect so the browser sends the updated cookie state to the server
-    window.location.href = "/login";
+    try {
+      const auth = getFirebaseAuth();
+      await signOut(auth);
+    } catch {
+      // ignore firebase sign-out errors
+    }
+    signOutAndRedirect();
   }
 
   return (

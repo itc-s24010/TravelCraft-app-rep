@@ -9,18 +9,32 @@ import { toast } from "sonner";
 export default function TripsPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: "", tripDate: "", memo: "", companions: "" });
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { loadTrips(); }, []);
+  useEffect(() => {
+    // No token means we cannot possibly succeed — skip the API call and
+    // go straight to the logout route (which clears the cookie + → /login).
+    if (!sessionStorage.getItem("__firebase_token")) {
+      window.location.href = "/api/logout";
+      return;
+    }
+    loadTrips();
+  }, []);
 
   async function loadTrips() {
     try {
       const data = await api.trips.list();
       setTrips(data);
-    } catch (e) {
-      toast.error("旅行一覧の取得に失敗しました");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "";
+      if (msg.includes("403") || msg.includes("401")) {
+        setAuthError(true);
+      } else {
+        toast.error("旅行一覧の取得に失敗しました");
+      }
     } finally {
       setLoading(false);
     }
@@ -56,6 +70,20 @@ export default function TripsPage() {
     } catch {
       toast.error("削除に失敗しました");
     }
+  }
+
+  if (authError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+        <p className="text-muted-foreground">セッションが切れました。ログインし直してください。</p>
+        <a
+          href="/api/logout"
+          className="px-5 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium"
+        >
+          ログインページへ
+        </a>
+      </div>
+    );
   }
 
   if (loading) {

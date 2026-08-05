@@ -1,64 +1,68 @@
-import { getFirebaseAuth } from "./firebase/client";
-import { onAuthStateChanged } from "firebase/auth";
+// ─── Auth helpers ──────────────────────────────────────────────────────────
 
-async function getAuthHeaders(): Promise<Record<string, string>> {
-  // Primary: use the token stored in sessionStorage at login time
-  if (typeof window !== "undefined") {
-    const stored = sessionStorage.getItem("__firebase_token");
-    if (stored) {
-      return { Authorization: `Bearer ${stored}` };
-    }
-  }
+/** Returns stored Firebase ID token, or null if not logged in. */
+function getStoredToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return sessionStorage.getItem("__firebase_token");
+}
 
-  // Fallback: get live token from Firebase auth state
-  const auth = getFirebaseAuth();
-  const user = await new Promise<import("firebase/auth").User | null>(
-    (resolve) => {
-      const unsub = onAuthStateChanged(auth, (u) => {
-        unsub();
-        resolve(u);
-      });
-    }
-  );
-  if (!user) {
-    console.warn("[api] no Firebase user — not logged in");
-    return {};
-  }
-  const token = await user.getIdToken();
-  // Cache it for subsequent calls
+/** Stores token so API calls can use it without re-initialising Firebase. */
+export function storeToken(token: string): void {
   if (typeof window !== "undefined") {
     sessionStorage.setItem("__firebase_token", token);
   }
-  return { Authorization: `Bearer ${token}` };
 }
+
+/** Clears stored token and session cookie, then sends browser to /login. */
+export function signOutAndRedirect(): void {
+  if (typeof window === "undefined") return;
+  sessionStorage.removeItem("__firebase_token");
+  document.cookie = "__session=; path=/; max-age=0; SameSite=Lax";
+  window.location.href = "/login";
+}
+
+// ─── Base request ──────────────────────────────────────────────────────────
 
 async function request<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const headers = await getAuthHeaders();
-  // Debug: log whether we have a token
-  if (typeof window !== "undefined") {
-    console.log("[api] request", path, "hasToken:", !!headers.Authorization);
+  const token = getStoredToken();
+  console.log("[api] request", path, "hasToken:", !!token);
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(options.headers as Record<string, string>),
+  };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  // 10s timeout so a hung fetch doesn't freeze the UI forever
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10_000);
+
+  let res: Response;
+  try {
+    res = await fetch(`/spring${path}`, {
+      ...options,
+      headers,
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timer);
   }
-  const res = await fetch(`/spring${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...headers,
-      ...(options.headers as Record<string, string>),
-    },
-  });
+
+  console.log("[api] response", path, res.status);
 
   if (!res.ok) {
     const text = await res.text();
-    console.error("[api] error", res.status, path, text);
     throw new Error(`API error ${res.status}: ${text}`);
   }
 
   if (res.status === 204) return undefined as T;
   return res.json();
 }
+
+// ─── API ───────────────────────────────────────────────────────────────────
 
 export const api = {
   categories: {
@@ -80,13 +84,11 @@ export const api = {
       request<Transportation[]>(`/trips/${tripId}/transportation`),
     create: (tripId: number, data: Partial<Transportation>) =>
       request<Transportation>(`/trips/${tripId}/transportation`, {
-        method: "POST",
-        body: JSON.stringify(data),
+        method: "POST", body: JSON.stringify(data),
       }),
     update: (tripId: number, id: number, data: Partial<Transportation>) =>
       request<Transportation>(`/trips/${tripId}/transportation/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
+        method: "PATCH", body: JSON.stringify(data),
       }),
     delete: (tripId: number, id: number) =>
       request<void>(`/trips/${tripId}/transportation/${id}`, { method: "DELETE" }),
@@ -96,13 +98,11 @@ export const api = {
       request<Accommodation[]>(`/trips/${tripId}/accommodation`),
     create: (tripId: number, data: Partial<Accommodation>) =>
       request<Accommodation>(`/trips/${tripId}/accommodation`, {
-        method: "POST",
-        body: JSON.stringify(data),
+        method: "POST", body: JSON.stringify(data),
       }),
     update: (tripId: number, id: number, data: Partial<Accommodation>) =>
       request<Accommodation>(`/trips/${tripId}/accommodation/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
+        method: "PATCH", body: JSON.stringify(data),
       }),
     delete: (tripId: number, id: number) =>
       request<void>(`/trips/${tripId}/accommodation/${id}`, { method: "DELETE" }),
@@ -111,13 +111,11 @@ export const api = {
     list: (tripId: number) => request<Budget[]>(`/trips/${tripId}/budget`),
     create: (tripId: number, data: Partial<Budget>) =>
       request<Budget>(`/trips/${tripId}/budget`, {
-        method: "POST",
-        body: JSON.stringify(data),
+        method: "POST", body: JSON.stringify(data),
       }),
     update: (tripId: number, id: number, data: Partial<Budget>) =>
       request<Budget>(`/trips/${tripId}/budget/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
+        method: "PATCH", body: JSON.stringify(data),
       }),
     delete: (tripId: number, id: number) =>
       request<void>(`/trips/${tripId}/budget/${id}`, { method: "DELETE" }),
@@ -126,13 +124,11 @@ export const api = {
     list: (tripId: number) => request<Expense[]>(`/trips/${tripId}/expenses`),
     create: (tripId: number, data: Partial<Expense>) =>
       request<Expense>(`/trips/${tripId}/expenses`, {
-        method: "POST",
-        body: JSON.stringify(data),
+        method: "POST", body: JSON.stringify(data),
       }),
     update: (tripId: number, id: number, data: Partial<Expense>) =>
       request<Expense>(`/trips/${tripId}/expenses/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
+        method: "PATCH", body: JSON.stringify(data),
       }),
     delete: (tripId: number, id: number) =>
       request<void>(`/trips/${tripId}/expenses/${id}`, { method: "DELETE" }),
@@ -142,20 +138,18 @@ export const api = {
       request<Notification[]>(`/trips/${tripId}/notifications`),
     create: (tripId: number, data: Partial<Notification>) =>
       request<Notification>(`/trips/${tripId}/notifications`, {
-        method: "POST",
-        body: JSON.stringify(data),
+        method: "POST", body: JSON.stringify(data),
       }),
     update: (tripId: number, id: number, data: Partial<Notification>) =>
       request<Notification>(`/trips/${tripId}/notifications/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
+        method: "PATCH", body: JSON.stringify(data),
       }),
     delete: (tripId: number, id: number) =>
       request<void>(`/trips/${tripId}/notifications/${id}`, { method: "DELETE" }),
   },
 };
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// ─── Types ─────────────────────────────────────────────────────────────────
 export interface Category { categoryId: number; categoryName: string }
 export interface Trip {
   tripId: number; userId: number; title: string;
