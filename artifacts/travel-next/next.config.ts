@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // Allow Replit's proxied preview domains so JS/CSS assets load correctly
-  allowedDevOrigins: ["*.replit.dev", "*.pike.replit.dev", "*.repl.co"],
+  allowedDevOrigins: ["*.replit.dev", "*.pike.replit.dev", "*.repl.co", "127.0.0.1"],
 
   async rewrites() {
     return [
