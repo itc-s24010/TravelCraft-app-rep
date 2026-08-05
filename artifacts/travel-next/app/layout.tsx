@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Outfit, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { SessionRefresher } from "@/components/session-refresher";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -28,6 +29,7 @@ export default function RootLayout({
   return (
     <html lang="ja" className={`${outfit.variable} ${playfair.variable}`}>
       <body>
+        <SessionRefresher />
         {children}
         <Toaster richColors position="top-right" />
       </body>
