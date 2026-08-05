@@ -1,10 +1,34 @@
 import { getFirebaseAuth } from "./firebase/client";
+import { onAuthStateChanged } from "firebase/auth";
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
+  // Primary: use the token stored in sessionStorage at login time
+  if (typeof window !== "undefined") {
+    const stored = sessionStorage.getItem("__firebase_token");
+    if (stored) {
+      return { Authorization: `Bearer ${stored}` };
+    }
+  }
+
+  // Fallback: get live token from Firebase auth state
   const auth = getFirebaseAuth();
-  const user = auth.currentUser;
-  if (!user) return {};
+  const user = await new Promise<import("firebase/auth").User | null>(
+    (resolve) => {
+      const unsub = onAuthStateChanged(auth, (u) => {
+        unsub();
+        resolve(u);
+      });
+    }
+  );
+  if (!user) {
+    console.warn("[api] no Firebase user — not logged in");
+    return {};
+  }
   const token = await user.getIdToken();
+  // Cache it for subsequent calls
+  if (typeof window !== "undefined") {
+    sessionStorage.setItem("__firebase_token", token);
+  }
   return { Authorization: `Bearer ${token}` };
 }
 
@@ -13,6 +37,10 @@ async function request<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const headers = await getAuthHeaders();
+  // Debug: log whether we have a token
+  if (typeof window !== "undefined") {
+    console.log("[api] request", path, "hasToken:", !!headers.Authorization);
+  }
   const res = await fetch(`/spring${path}`, {
     ...options,
     headers: {
@@ -24,6 +52,7 @@ async function request<T>(
 
   if (!res.ok) {
     const text = await res.text();
+    console.error("[api] error", res.status, path, text);
     throw new Error(`API error ${res.status}: ${text}`);
   }
 

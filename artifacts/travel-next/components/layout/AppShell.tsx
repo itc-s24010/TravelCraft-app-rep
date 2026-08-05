@@ -11,10 +11,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   async function handleSignOut() {
     const auth = getFirebaseAuth();
     await signOut(auth);
-    // Clear session cookie
-    document.cookie = "__session=; path=/; max-age=0";
-    router.push("/login");
-    router.refresh();
+    // Clear session cookie — must match same attributes used when setting it
+    document.cookie = "__session=; path=/; max-age=0; SameSite=Lax";
+    // Hard redirect so the browser sends the updated cookie state to the server
+    window.location.href = "/login";
   }
 
   return (

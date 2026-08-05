@@ -28,8 +28,12 @@ export default function LoginPage() {
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }
+      // Get the Firebase ID token and store it for API calls
+      const auth2 = getFirebaseAuth();
+      const idToken = await auth2.currentUser!.getIdToken();
+      sessionStorage.setItem("__firebase_token", idToken);
       // Set session cookie so middleware can detect auth state
-      document.cookie = "__session=1; path=/; max-age=3600; SameSite=Lax";
+      document.cookie = "__session=1; path=/; max-age=604800; SameSite=Lax";
       router.push("/trips");
       router.refresh();
     } catch (err: unknown) {
