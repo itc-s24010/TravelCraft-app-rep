@@ -1,32 +1,39 @@
 ---
 name: Travel Planner Architecture
-description: フルスタック旅行計画アプリの構成・スタック・主要決定事項
+description: フルスタック旅行計画アプリの構成・主要決定事項
 ---
 
-# Travel Planner — Architecture Notes
+## スタック
+- Frontend: Next.js 15 (TypeScript + Tailwind) @ port 24289
+- Backend: Spring Boot 3.2.5 (Java 19) @ port 8099
+- DB: Supabase PostgreSQL (Transaction Pooler 経由)
+- Auth: Firebase Authentication (Email/Password)
 
-## Stack
-- **Frontend**: React + Vite (`artifacts/travel-planner`), Clerk auth, Wouter routing, TanStack Query, shadcn/ui, Recharts
-- **Backend**: Express API server (`artifacts/api-server`), Drizzle ORM + Replit PostgreSQL
-- **Auth**: Replit-managed Clerk (keys: CLERK_PUBLISHABLE_KEY, CLERK_SECRET_KEY, VITE_CLERK_PUBLISHABLE_KEY)
-- **API spec**: OpenAPI → Orval codegen → `lib/api-client-react` hooks + `lib/api-zod` schemas
+## 重要な設定
 
-## Routing
-- Path-based routing via Replit proxy: `/` → travel-planner (port 24289), `/api` → api-server (port 8080)
-- No Vite proxy needed — Replit handles `/api/*` → api-server automatically
+### Next.js
+- `next.config.ts`: `/api/*` → `http://localhost:8099/api/*` にリライト
+- `allowedDevOrigins: ["*.replit.dev", "*.pike.replit.dev", "*.repl.co"]` 必須 — ないと Replit プレビューで JS/CSS がクロスオリインブロックされ白画面になる
+- ミドルウェア: `__session` クッキーで認証チェック（Firebase SDK は Edge Runtime 非対応のため）
+- Firebase は遅延初期化 `getFirebaseAuth()` を使用 — モジュールレベル初期化だと SSR でクラッシュ (`self is not defined`)
 
-## Key Decisions
-- Drizzle ORM with `numeric` type returns strings — always `parseFloat()` before returning JSON
-- Orval v8.23 generates Zod v4 syntax (`zod.int()`); patched with sed in `lib/api-spec/package.json` to `zod.number().int()`
-- User JIT provisioning: `ensureUser()` called at start of each trip route handler
-- Soft delete on trips via `deletedAt` column; related records (transportation etc.) NOT cascaded
+### Firebase Auth
+- `lib/firebase/client.ts`: `getFirebaseAuth()` 関数でラップ（クライアントサイドのみ）
+- ログイン成功後に `__session=1` クッキーをセット (max-age=3600)
+- ログアウト時にクッキーをクリア
 
-## DB Tables
-users, categories, trips, transportation, accommodation, budget, expense, notification
+### Spring Boot
+- `FirebaseJwtFilter.java`: Google の JWKS (`securetoken@system.gserviceaccount.com`) でRS256検証
+- JWKS は1時間キャッシュ
+- `application.yml`: `firebase.project-id: ${NEXT_PUBLIC_FIREBASE_PROJECT_ID}`
+- Issuer: `https://securetoken.google.com/{projectId}`, Audience: `{projectId}`
 
-## Seeded Categories
-交通費, 宿泊費, 食費, 観光・体験, お土産, その他
+### Supabase DB
+- Transaction Pooler URL必須 (IPv6問題回避): `aws-0-ap-northeast-1.pooler.supabase.com:6543`
+- `DataSourceConfig.java` で自動変換
+- JDBC URL に `prepareThreshold=0` 必須 — ないと `prepared statement "S_1" already exists` エラー
+- `SUPABASE_SERVICE_ROLE_KEY` は実際には anon キー (JWT) が設定されている点に注意 — admin API 使用不可
 
-## Design Palette
-Sunset Orange (#primary: hsl(16,93%,56%)) + Ocean Teal (#secondary: hsl(181,65%,35%))
-Fonts: Outfit (sans) + Playfair Display (serif)
+## ワークフロー
+- `artifacts/travel-planner: web` が Next.js を管理 (pnpm --filter @workspace/travel-next run dev)
+- `Spring Boot API` が Spring Boot を管理

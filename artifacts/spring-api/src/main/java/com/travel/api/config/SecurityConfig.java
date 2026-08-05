@@ -1,6 +1,6 @@
 package com.travel.api.config;
 
-import com.travel.api.security.SupabaseJwtFilter;
+import com.travel.api.security.FirebaseJwtFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,7 +17,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final SupabaseJwtFilter supabaseJwtFilter;
+    private final FirebaseJwtFilter firebaseJwtFilter;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -29,7 +29,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/categories").permitAll()
                 .anyRequest().authenticated()
             )
-            .addFilterBefore(supabaseJwtFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(firebaseJwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

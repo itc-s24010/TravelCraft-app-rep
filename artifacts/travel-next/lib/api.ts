@@ -1,10 +1,11 @@
-import { createClient } from "./supabase/client";
+import { getFirebaseAuth } from "./firebase/client";
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
-  const supabase = createClient();
-  const { data } = await supabase.auth.getSession();
-  const token = data.session?.access_token;
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  const auth = getFirebaseAuth();
+  const user = auth.currentUser;
+  if (!user) return {};
+  const token = await user.getIdToken();
+  return { Authorization: `Bearer ${token}` };
 }
 
 async function request<T>(
@@ -12,7 +13,7 @@ async function request<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const headers = await getAuthHeaders();
-  const res = await fetch(`/api${path}`, {
+  const res = await fetch(`/spring${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -31,11 +32,9 @@ async function request<T>(
 }
 
 export const api = {
-  // Categories
   categories: {
     list: () => request<Category[]>("/categories"),
   },
-  // Trips
   trips: {
     list: () => request<Trip[]>("/trips"),
     create: (data: Partial<Trip>) =>
@@ -47,7 +46,6 @@ export const api = {
       request<void>(`/trips/${id}`, { method: "DELETE" }),
     summary: (id: number) => request<Summary>(`/trips/${id}/summary`),
   },
-  // Transportation
   transportation: {
     list: (tripId: number) =>
       request<Transportation[]>(`/trips/${tripId}/transportation`),
@@ -64,7 +62,6 @@ export const api = {
     delete: (tripId: number, id: number) =>
       request<void>(`/trips/${tripId}/transportation/${id}`, { method: "DELETE" }),
   },
-  // Accommodation
   accommodation: {
     list: (tripId: number) =>
       request<Accommodation[]>(`/trips/${tripId}/accommodation`),
@@ -81,7 +78,6 @@ export const api = {
     delete: (tripId: number, id: number) =>
       request<void>(`/trips/${tripId}/accommodation/${id}`, { method: "DELETE" }),
   },
-  // Budget
   budget: {
     list: (tripId: number) => request<Budget[]>(`/trips/${tripId}/budget`),
     create: (tripId: number, data: Partial<Budget>) =>
@@ -97,7 +93,6 @@ export const api = {
     delete: (tripId: number, id: number) =>
       request<void>(`/trips/${tripId}/budget/${id}`, { method: "DELETE" }),
   },
-  // Expenses
   expenses: {
     list: (tripId: number) => request<Expense[]>(`/trips/${tripId}/expenses`),
     create: (tripId: number, data: Partial<Expense>) =>
@@ -113,7 +108,6 @@ export const api = {
     delete: (tripId: number, id: number) =>
       request<void>(`/trips/${tripId}/expenses/${id}`, { method: "DELETE" }),
   },
-  // Notifications
   notifications: {
     list: (tripId: number) =>
       request<Notification[]>(`/trips/${tripId}/notifications`),

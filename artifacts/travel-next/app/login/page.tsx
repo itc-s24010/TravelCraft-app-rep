@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { getFirebaseAuth } from "@/lib/firebase/client";
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+} from "firebase/auth";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
@@ -11,38 +15,43 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
-  const supabase = createClient();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    let authError: string | null = null;
-
-    if (isSignUp) {
-      const { error } = await supabase.auth.signUp({ email, password });
-      if (error) {
-        if (error.message.toLowerCase().includes("rate limit")) {
-          authError = "メール送信の上限に達しました。すでにアカウントをお持ちの場合は「ログイン」からサインインしてください。";
-        } else if (error.message.toLowerCase().includes("already registered") || error.message.toLowerCase().includes("already exists")) {
-          authError = "このメールアドレスはすでに登録されています。「ログイン」からサインインしてください。";
-        } else {
-          authError = error.message;
-        }
+    try {
+      const auth = getFirebaseAuth();
+      if (isSignUp) {
+        await createUserWithEmailAndPassword(auth, email, password);
+      } else {
+        await signInWithEmailAndPassword(auth, email, password);
       }
-    } else {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) authError = error.message;
-    }
-
-    if (authError) {
-      setError(authError);
-    } else {
+      // Set session cookie so middleware can detect auth state
+      document.cookie = "__session=1; path=/; max-age=3600; SameSite=Lax";
       router.push("/trips");
       router.refresh();
+    } catch (err: unknown) {
+      const code = (err as { code?: string }).code ?? "";
+      if (code === "auth/email-already-in-use") {
+        setError("このメールアドレスはすでに登録されています。ログインしてください。");
+      } else if (
+        code === "auth/user-not-found" ||
+        code === "auth/wrong-password" ||
+        code === "auth/invalid-credential"
+      ) {
+        setError("メールアドレスまたはパスワードが正しくありません。");
+      } else if (code === "auth/weak-password") {
+        setError("パスワードは6文字以上にしてください。");
+      } else if (code === "auth/invalid-email") {
+        setError("メールアドレスの形式が正しくありません。");
+      } else {
+        setError((err as Error).message ?? "エラーが発生しました");
+      }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   return (
@@ -110,7 +119,10 @@ export default function LoginPage() {
           <div className="mt-6 text-center text-sm text-muted-foreground">
             {isSignUp ? "すでにアカウントをお持ちですか？" : "アカウントをお持ちでないですか？"}{" "}
             <button
-              onClick={() => { setIsSignUp(!isSignUp); setError(""); }}
+              onClick={() => {
+                setIsSignUp(!isSignUp);
+                setError("");
+              }}
               className="text-primary font-medium hover:underline"
             >
               {isSignUp ? "ログイン" : "新規登録"}

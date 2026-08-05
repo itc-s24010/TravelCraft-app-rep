@@ -16,7 +16,6 @@
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/repository/TransportationRepository.java
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/dto/request/BudgetRequest.java
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/entity/Trip.java
-/home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/security/SupabaseJwtFilter.java
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/TravelApiApplication.java
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/repository/BudgetRepository.java
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/controller/NotificationController.java
@@ -38,3 +37,4 @@
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/dto/request/TripRequest.java
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/entity/Expense.java
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/repository/NotificationRepository.java
+/home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/security/FirebaseJwtFilter.java

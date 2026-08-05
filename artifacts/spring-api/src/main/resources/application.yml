@@ -19,9 +19,8 @@ spring:
     serialization:
       write-dates-as-timestamps: false
 
-supabase:
-  url: ${SUPABASE_URL}
-  jwt-secret: ${SUPABASE_JWT_SECRET}
+firebase:
+  project-id: ${NEXT_PUBLIC_FIREBASE_PROJECT_ID}
 
 logging:
   level:

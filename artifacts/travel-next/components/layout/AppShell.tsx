@@ -1,21 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import { cn } from "@/lib/utils";
-
-const navItems = [
-  { href: "/trips", label: "旅行一覧", icon: "🗺️" },
-];
+import { useRouter } from "next/navigation";
+import { getFirebaseAuth } from "@/lib/firebase/client";
+import { signOut } from "firebase/auth";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
   const router = useRouter();
-  const supabase = createClient();
 
   async function handleSignOut() {
-    await supabase.auth.signOut();
+    const auth = getFirebaseAuth();
+    await signOut(auth);
+    // Clear session cookie
+    document.cookie = "__session=; path=/; max-age=0";
     router.push("/login");
     router.refresh();
   }

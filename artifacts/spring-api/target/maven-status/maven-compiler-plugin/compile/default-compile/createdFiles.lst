@@ -21,7 +21,6 @@ com/travel/api/entity/Notification.class
 com/travel/api/service/UserService.class
 com/travel/api/entity/Expense$ExpenseBuilder.class
 com/travel/api/controller/TripController.class
-com/travel/api/security/SupabaseJwtFilter.class
 com/travel/api/config/DataSourceConfig.class
 com/travel/api/dto/response/SummaryResponse$CategoryBreakdown$CategoryBreakdownBuilder.class
 com/travel/api/repository/NotificationRepository.class
@@ -37,6 +36,7 @@ com/travel/api/entity/Category$CategoryBuilder.class
 com/travel/api/entity/Trip$TripBuilder.class
 com/travel/api/repository/TransportationRepository.class
 com/travel/api/entity/Accommodation$AccommodationBuilder.class
+com/travel/api/security/FirebaseJwtFilter.class
 com/travel/api/controller/NotificationController.class
 com/travel/api/config/DataInitializer.class
 com/travel/api/entity/Transportation.class
