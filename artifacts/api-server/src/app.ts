@@ -49,6 +49,6 @@ app.use(
   })),
 );
 
-app.use("/api", router);
+app.use("/node-api", router);
 
 export default app;
