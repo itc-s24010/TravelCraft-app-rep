@@ -158,3 +158,13 @@ overrides:
   # drizzle-kit uses esbuild internally on an older version that's vulnerable, this overrides it
   "@esbuild-kit/esm-loader": "npm:tsx@^4.21.0"
   esbuild: "0.27.3"
+
+allowBuilds:
+  # esbuild installs its platform-specific binary; sharp installs its native
+  # image-processing binary, which Next.js can use for image optimization.
+  esbuild: true
+  sharp: true
+  # These scripts are not required by this workspace at install time.
+  '@clerk/shared': false
+  '@firebase/util': false
+  protobufjs: false

@@ -8,10 +8,19 @@ import {
 } from "firebase/auth";
 
 export default function LoginPage() {
-  // If already logged in, go straight to trips
+  // A token can outlive the session cookie (for example after a server restart).
+  // Redirect only when both pieces of the client-side session are present;
+  // otherwise the middleware would send /trips straight back to /login.
   useEffect(() => {
-    if (sessionStorage.getItem("__firebase_token")) {
+    const hasToken = Boolean(sessionStorage.getItem("__firebase_token"));
+    const hasSessionCookie = document.cookie
+      .split("; ")
+      .some((cookie) => cookie.startsWith("__session=1"));
+
+    if (hasToken && hasSessionCookie) {
       window.location.href = "/trips";
+    } else if (hasToken) {
+      sessionStorage.removeItem("__firebase_token");
     }
   }, []);
 
