@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { api, type Trip, type Summary, type Transportation, type Accommodation, type Budget, type Expense, type Notification, type Category } from "@/lib/api";
+import { api, type Trip, type Summary, type Category } from "@/lib/api";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { toast } from "sonner";
 import { BudgetTab } from "@/components/trip/BudgetTab";
@@ -32,6 +32,11 @@ export default function TripDetailPage() {
   const [activeTab, setActiveTab] = useState("overview");
   const [loading, setLoading] = useState(true);
 
+  // Trip edit state
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({ title: "", tripDate: "", companions: "", memo: "" });
+  const [saving, setSaving] = useState(false);
+
   useEffect(() => { loadAll(); }, [id]);
 
   async function loadAll() {
@@ -58,6 +63,37 @@ export default function TripDetailPage() {
     } catch {}
   }
 
+  function startEdit() {
+    if (!trip) return;
+    setEditForm({
+      title: trip.title ?? "",
+      tripDate: trip.tripDate ?? "",
+      companions: trip.companions != null ? String(trip.companions) : "",
+      memo: trip.memo ?? "",
+    });
+    setIsEditing(true);
+  }
+
+  async function handleUpdate(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const updated = await api.trips.update(id, {
+        title: editForm.title || undefined,
+        tripDate: editForm.tripDate || undefined,
+        companions: editForm.companions !== "" ? Number(editForm.companions) : undefined,
+        memo: editForm.memo || undefined,
+      });
+      setTrip(updated);
+      setIsEditing(false);
+      toast.success("旅行情報を更新しました");
+    } catch {
+      toast.error("更新に失敗しました");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -79,7 +115,15 @@ export default function TripDetailPage() {
 
       {/* Trip Header */}
       <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-2xl p-6 mb-6 border border-border">
-        <h1 className="text-2xl font-bold mb-2">{trip.title}</h1>
+        <div className="flex items-start justify-between mb-2">
+          <h1 className="text-2xl font-bold">{trip.title}</h1>
+          <button
+            onClick={startEdit}
+            className="text-xs px-3 py-1.5 border border-border rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/60 transition-colors"
+          >
+            ✏️ 編集
+          </button>
+        </div>
         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
           {trip.tripDate && <span>📅 {formatDate(trip.tripDate)}</span>}
           {trip.companions != null && <span>👥 {trip.companions}名</span>}
@@ -101,6 +145,70 @@ export default function TripDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Edit Modal */}
+      {isEditing && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-5 border-b border-border">
+              <h2 className="font-semibold text-lg">旅行情報を編集</h2>
+              <button onClick={() => setIsEditing(false)} className="text-muted-foreground hover:text-foreground text-xl leading-none">×</button>
+            </div>
+            <form onSubmit={handleUpdate} className="p-5 space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">旅行名 <span className="text-destructive">*</span></label>
+                <input
+                  required
+                  value={editForm.title}
+                  onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                  className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  placeholder="例：京都旅行"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">日付</label>
+                <input
+                  type="date"
+                  value={editForm.tripDate}
+                  onChange={(e) => setEditForm({ ...editForm, tripDate: e.target.value })}
+                  className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">同行者数</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={editForm.companions}
+                  onChange={(e) => setEditForm({ ...editForm, companions: e.target.value })}
+                  className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">メモ</label>
+                <textarea
+                  rows={3}
+                  value={editForm.memo}
+                  onChange={(e) => setEditForm({ ...editForm, memo: e.target.value })}
+                  className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                  placeholder="自由記入欄"
+                />
+              </div>
+              <div className="flex gap-2 justify-end pt-2">
+                <button type="button" onClick={() => setIsEditing(false)}
+                  className="px-4 py-2 border border-border rounded-lg text-sm hover:bg-muted">
+                  キャンセル
+                </button>
+                <button type="submit" disabled={saving}
+                  className="px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary/90 disabled:opacity-50">
+                  {saving ? "保存中..." : "保存"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6 bg-muted/50 rounded-xl p-1 overflow-x-auto">
@@ -139,6 +247,12 @@ export default function TripDetailPage() {
                 <div className="flex justify-between">
                   <dt className="text-muted-foreground">同行者数</dt>
                   <dd>{trip.companions}名</dd>
+                </div>
+              )}
+              {trip.memo && (
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground shrink-0">メモ</dt>
+                  <dd className="text-right">{trip.memo}</dd>
                 </div>
               )}
             </dl>

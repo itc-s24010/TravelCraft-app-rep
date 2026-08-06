@@ -8,12 +8,19 @@ interface Props { tripId: number; }
 
 const TYPES = ["出発リマインダー", "チェックイン", "チェックアウト", "フライト", "その他"];
 
+const emptyForm = () => ({ reminder: "", notificationDatetime: "", notificationType: "" });
+
 export function NotificationTab({ tripId }: Props) {
   const [items, setItems] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ reminder: "", notificationDatetime: "", notificationType: "" });
+  const [form, setForm] = useState(emptyForm());
   const [saving, setSaving] = useState(false);
+
+  // Edit state
+  const [editId, setEditId] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState(emptyForm());
+  const [editSaving, setEditSaving] = useState(false);
 
   useEffect(() => { load(); }, [tripId]);
 
@@ -34,10 +41,40 @@ export function NotificationTab({ tripId }: Props) {
       });
       toast.success("通知を追加しました");
       setShowForm(false);
-      setForm({ reminder: "", notificationDatetime: "", notificationType: "" });
+      setForm(emptyForm());
       await load();
     } catch { toast.error("追加に失敗しました"); }
     finally { setSaving(false); }
+  }
+
+  function startEdit(item: Notification) {
+    setEditId(item.notificationId);
+    setEditForm({
+      notificationType: item.notificationType ?? "",
+      reminder: item.reminder ?? "",
+      notificationDatetime: item.notificationDatetime
+        ? new Date(item.notificationDatetime).toISOString().slice(0, 16)
+        : "",
+    });
+  }
+
+  async function handleUpdate(e: React.FormEvent) {
+    e.preventDefault();
+    if (editId == null) return;
+    setEditSaving(true);
+    try {
+      await api.notifications.update(tripId, editId, {
+        reminder: editForm.reminder || undefined,
+        notificationDatetime: editForm.notificationDatetime
+          ? new Date(editForm.notificationDatetime).toISOString()
+          : undefined,
+        notificationType: editForm.notificationType || undefined,
+      });
+      toast.success("更新しました");
+      setEditId(null);
+      await load();
+    } catch { toast.error("更新に失敗しました"); }
+    finally { setEditSaving(false); }
   }
 
   async function handleDelete(id: number) {
@@ -51,31 +88,33 @@ export function NotificationTab({ tripId }: Props) {
 
   if (loading) return <div className="py-8 text-center text-muted-foreground">読み込み中...</div>;
 
+  const inputCls = "w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50";
+
   return (
     <div className="bg-white rounded-xl border border-border p-4">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold">通知・リマインダー</h3>
-        <button onClick={() => setShowForm(true)}
+        <button onClick={() => { setShowForm(true); setEditId(null); }}
           className="text-sm px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-primary/90">
           ＋ 追加
         </button>
       </div>
 
+      {/* Create form */}
       {showForm && (
         <form onSubmit={handleCreate} className="space-y-2 mb-4 p-3 bg-muted/30 rounded-lg">
           <select value={form.notificationType} onChange={(e) => setForm({ ...form, notificationType: e.target.value })}
-            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
+            className={inputCls}>
             <option value="">通知タイプ</option>
             {TYPES.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
           <textarea value={form.reminder} onChange={(e) => setForm({ ...form, reminder: e.target.value })}
-            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
-            rows={2} placeholder="リマインダーメッセージ" />
+            className={`${inputCls} resize-none`} rows={2} placeholder="リマインダーメッセージ" />
           <div>
             <label className="block text-xs text-muted-foreground mb-1">通知日時</label>
             <input type="datetime-local" value={form.notificationDatetime}
               onChange={(e) => setForm({ ...form, notificationDatetime: e.target.value })}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+              className={inputCls} />
           </div>
           <div className="flex gap-2 justify-end">
             <button type="button" onClick={() => setShowForm(false)}
@@ -93,24 +132,58 @@ export function NotificationTab({ tripId }: Props) {
       ) : (
         <div className="space-y-3">
           {items.map((item) => (
-            <div key={item.notificationId} className="p-3 rounded-lg border border-border/70 bg-muted/20">
-              <div className="flex items-start justify-between">
-                <div>
-                  {item.notificationType && (
-                    <span className="inline-block text-xs bg-primary/10 text-primary font-medium px-2 py-0.5 rounded-full mb-1">
-                      {item.notificationType}
-                    </span>
-                  )}
-                  {item.reminder && <p className="text-sm">{item.reminder}</p>}
-                  {item.notificationDatetime && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      🔔 {new Date(item.notificationDatetime).toLocaleString("ja-JP")}
-                    </p>
-                  )}
+            <div key={item.notificationId} className="rounded-lg border border-border/70 bg-muted/20 overflow-hidden">
+              {editId === item.notificationId ? (
+                /* Edit form */
+                <form onSubmit={handleUpdate} className="space-y-2 p-3">
+                  <select value={editForm.notificationType}
+                    onChange={(e) => setEditForm({ ...editForm, notificationType: e.target.value })}
+                    className={inputCls}>
+                    <option value="">通知タイプ</option>
+                    {TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                  <textarea value={editForm.reminder}
+                    onChange={(e) => setEditForm({ ...editForm, reminder: e.target.value })}
+                    className={`${inputCls} resize-none`} rows={2} placeholder="リマインダーメッセージ" />
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1">通知日時</label>
+                    <input type="datetime-local" value={editForm.notificationDatetime}
+                      onChange={(e) => setEditForm({ ...editForm, notificationDatetime: e.target.value })}
+                      className={inputCls} />
+                  </div>
+                  <div className="flex gap-2 justify-end">
+                    <button type="button" onClick={() => setEditId(null)}
+                      className="px-3 py-1.5 border border-border rounded-lg text-sm hover:bg-muted">キャンセル</button>
+                    <button type="submit" disabled={editSaving}
+                      className="px-3 py-1.5 bg-primary text-white rounded-lg text-sm hover:bg-primary/90 disabled:opacity-50">
+                      {editSaving ? "保存中..." : "保存"}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                /* Display */
+                <div className="p-3 flex items-start justify-between">
+                  <div>
+                    {item.notificationType && (
+                      <span className="inline-block text-xs bg-primary/10 text-primary font-medium px-2 py-0.5 rounded-full mb-1">
+                        {item.notificationType}
+                      </span>
+                    )}
+                    {item.reminder && <p className="text-sm">{item.reminder}</p>}
+                    {item.notificationDatetime && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        🔔 {new Date(item.notificationDatetime).toLocaleString("ja-JP")}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex gap-2 shrink-0 ml-2">
+                    <button onClick={() => startEdit(item)}
+                      className="text-xs text-muted-foreground hover:text-primary">編集</button>
+                    <button onClick={() => handleDelete(item.notificationId)}
+                      className="text-xs text-muted-foreground hover:text-destructive">削除</button>
+                  </div>
                 </div>
-                <button onClick={() => handleDelete(item.notificationId)}
-                  className="text-xs text-muted-foreground hover:text-destructive">削除</button>
-              </div>
+              )}
             </div>
           ))}
         </div>
