@@ -20,6 +20,7 @@
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/TravelApiApplication.java
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/repository/BudgetRepository.java
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/controller/NotificationController.java
+/home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/config/FkMigration.java
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/service/SummaryService.java
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/dto/request/ExpenseRequest.java
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/controller/TripController.java

@@ -103,7 +103,8 @@ export function BudgetTab({ tripId, categories, summary, onRefresh }: Props) {
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
                 <Pie data={chartData} cx="50%" cy="50%" innerRadius={55} outerRadius={90}
-                  dataKey="value" nameKey="name" paddingAngle={2}>
+                  dataKey="value" nameKey="name" paddingAngle={2}
+                  startAngle={90} endAngle={-270}>
                   {chartData.map((entry, i) => (
                     <Cell key={i}
                       fill={entry.unused ? "#e5e7eb" : COLORS[i % COLORS.length]}

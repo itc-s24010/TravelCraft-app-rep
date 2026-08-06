@@ -1,5 +1,6 @@
 com/travel/api/dto/request/AccommodationRequest.class
 com/travel/api/dto/response/SummaryResponse.class
+com/travel/api/config/FkMigration.class
 com/travel/api/entity/User.class
 com/travel/api/controller/HealthController.class
 com/travel/api/dto/response/SummaryResponse$SummaryResponseBuilder.class
