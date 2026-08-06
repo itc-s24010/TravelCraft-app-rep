@@ -22,7 +22,7 @@ args = "Spring Boot API"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Next.js Travel App"
+args = "artifacts/travel-planner: web"
 
 [[workflows.workflow]]
 name = "Spring Boot API"
@@ -36,25 +36,9 @@ waitForPort = 8099
 [workflows.workflow.metadata]
 outputType = "console"
 
-[[workflows.workflow]]
-name = "Next.js Travel App"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cd artifacts/travel-next && pnpm install && PORT=3000 pnpm run dev"
-waitForPort = 3000
-
-[workflows.workflow.metadata]
-outputType = "webview"
-
 [agent]
 stack = "PNPM_WORKSPACE"
 expertMode = true
-
-[postMerge]
-path = "scripts/post-merge.sh"
-timeoutMs = 20000
 
 [nix]
 channel = "stable-25_05"
