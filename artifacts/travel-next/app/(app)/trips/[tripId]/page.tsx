@@ -11,9 +11,11 @@ import { ExpenseTab } from "@/components/trip/ExpenseTab";
 import { TransportationTab } from "@/components/trip/TransportationTab";
 import { AccommodationTab } from "@/components/trip/AccommodationTab";
 import { NotificationTab } from "@/components/trip/NotificationTab";
+import { ScheduleTab } from "@/components/trip/ScheduleTab";
 
 const TABS = [
   { id: "overview", label: "概要" },
+  { id: "schedule", label: "スケジュール" },
   { id: "budget", label: "予算" },
   { id: "expenses", label: "支出" },
   { id: "transportation", label: "交通" },
@@ -281,6 +283,9 @@ export default function TripDetailPage() {
             </div>
           )}
         </div>
+      )}
+      {activeTab === "schedule" && (
+        <ScheduleTab tripId={id} />
       )}
       {activeTab === "budget" && (
         <BudgetTab tripId={id} categories={categories} summary={summary} onRefresh={refreshSummary} />

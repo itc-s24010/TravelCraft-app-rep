@@ -14,6 +14,7 @@
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/dto/request/AccommodationRequest.java
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/security/UserPrincipal.java
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/repository/TransportationRepository.java
+/home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/repository/ScheduleItemRepository.java
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/dto/request/BudgetRequest.java
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/entity/Trip.java
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/TravelApiApplication.java
@@ -26,7 +27,9 @@
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/repository/UserRepository.java
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/controller/TransportationController.java
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/entity/Transportation.java
+/home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/entity/ScheduleItem.java
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/controller/HealthController.java
+/home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/controller/ScheduleItemController.java
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/entity/Notification.java
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/controller/AccommodationController.java
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/entity/Accommodation.java
@@ -35,6 +38,7 @@
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/entity/User.java
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/config/DataInitializer.java
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/dto/request/TripRequest.java
+/home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/dto/request/ScheduleItemRequest.java
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/entity/Expense.java
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/repository/NotificationRepository.java
 /home/runner/workspace/artifacts/spring-api/src/main/java/com/travel/api/security/FirebaseJwtFilter.java

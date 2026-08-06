@@ -147,6 +147,20 @@ export const api = {
     delete: (tripId: number, id: number) =>
       request<void>(`/trips/${tripId}/notifications/${id}`, { method: "DELETE" }),
   },
+  schedule: {
+    list: (tripId: number) =>
+      request<ScheduleItem[]>(`/trips/${tripId}/schedule`),
+    create: (tripId: number, data: Partial<ScheduleItem>) =>
+      request<ScheduleItem>(`/trips/${tripId}/schedule`, {
+        method: "POST", body: JSON.stringify(data),
+      }),
+    update: (tripId: number, id: number, data: Partial<ScheduleItem>) =>
+      request<ScheduleItem>(`/trips/${tripId}/schedule/${id}`, {
+        method: "PATCH", body: JSON.stringify(data),
+      }),
+    delete: (tripId: number, id: number) =>
+      request<void>(`/trips/${tripId}/schedule/${id}`, { method: "DELETE" }),
+  },
 };
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -178,6 +192,12 @@ export interface Expense {
 export interface Notification {
   notificationId: number; tripId: number;
   reminder?: string; notificationDatetime?: string; notificationType?: string;
+}
+export interface ScheduleItem {
+  scheduleId: number; tripId: number;
+  title: string; description?: string; location?: string;
+  startTime?: string; endTime?: string; cost?: number;
+  createdAt?: string;
 }
 export interface Summary {
   totalBudget: number; totalExpense: number; remaining: number;

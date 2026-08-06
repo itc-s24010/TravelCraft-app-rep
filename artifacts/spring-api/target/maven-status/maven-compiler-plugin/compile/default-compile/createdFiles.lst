@@ -6,6 +6,7 @@ com/travel/api/dto/response/SummaryResponse$SummaryResponseBuilder.class
 com/travel/api/config/CorsConfig.class
 com/travel/api/controller/BudgetController.class
 com/travel/api/TravelApiApplication.class
+com/travel/api/entity/ScheduleItem.class
 com/travel/api/dto/request/ExpenseRequest.class
 com/travel/api/entity/Budget$BudgetBuilder.class
 com/travel/api/entity/Accommodation.class
@@ -15,6 +16,8 @@ com/travel/api/controller/ExpenseController.class
 com/travel/api/config/SecurityConfig.class
 com/travel/api/repository/TripRepository.class
 com/travel/api/dto/response/SummaryResponse$CategoryBreakdown.class
+com/travel/api/dto/request/ScheduleItemRequest.class
+com/travel/api/repository/ScheduleItemRepository.class
 com/travel/api/entity/Expense.class
 com/travel/api/security/UserPrincipal.class
 com/travel/api/entity/Notification.class
@@ -26,6 +29,7 @@ com/travel/api/dto/response/SummaryResponse$CategoryBreakdown$CategoryBreakdownB
 com/travel/api/repository/NotificationRepository.class
 com/travel/api/dto/request/NotificationRequest.class
 com/travel/api/dto/request/BudgetRequest.class
+com/travel/api/controller/ScheduleItemController.class
 com/travel/api/entity/Budget.class
 com/travel/api/controller/AccommodationController.class
 com/travel/api/controller/CategoryController.class
@@ -39,6 +43,7 @@ com/travel/api/entity/Accommodation$AccommodationBuilder.class
 com/travel/api/security/FirebaseJwtFilter.class
 com/travel/api/controller/NotificationController.class
 com/travel/api/config/DataInitializer.class
+com/travel/api/entity/ScheduleItem$ScheduleItemBuilder.class
 com/travel/api/entity/Transportation.class
 com/travel/api/repository/UserRepository.class
 com/travel/api/entity/Transportation$TransportationBuilder.class
