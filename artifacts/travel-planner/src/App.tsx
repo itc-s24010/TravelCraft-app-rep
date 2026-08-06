@@ -206,6 +206,9 @@ function ClerkProviderWithRoutes() {
             <Route path="/trips/:tripId/budget/new"><AppLayout><ProtectedRoute component={TripDetail} /></AppLayout></Route>
             <Route path="/trips/:tripId/expenses/new"><AppLayout><ProtectedRoute component={TripDetail} /></AppLayout></Route>
             <Route path="/trips/:tripId/notifications"><AppLayout><ProtectedRoute component={TripDetail} /></AppLayout></Route>
+            <Route path="/trips/:tripId/schedule"><AppLayout><ProtectedRoute component={TripDetail} /></AppLayout></Route>
+            <Route path="/trips/:tripId/schedule/new"><AppLayout><ProtectedRoute component={TripDetail} /></AppLayout></Route>
+            <Route path="/trips/:tripId/schedule/activities/:activityId/edit"><AppLayout><ProtectedRoute component={TripDetail} /></AppLayout></Route>
 
             <Route><AppLayout><NotFound /></AppLayout></Route>
           </Switch>

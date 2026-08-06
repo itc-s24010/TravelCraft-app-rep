@@ -15,6 +15,8 @@ export interface Trip {
   title: string;
   tripDate: string;
   /** @nullable */
+  endDate?: string | null;
+  /** @nullable */
   memo?: string | null;
   /** @nullable */
   companions?: string | null;
@@ -26,6 +28,7 @@ export interface TripInput {
   /** @maxLength 200 */
   title: string;
   tripDate: string;
+  endDate?: string;
   memo?: string;
   companions?: string;
 }
@@ -34,6 +37,8 @@ export interface TripUpdate {
   /** @maxLength 200 */
   title?: string;
   tripDate?: string;
+  /** @nullable */
+  endDate?: string | null;
   /** @nullable */
   memo?: string | null;
   /** @nullable */
@@ -204,5 +209,51 @@ export interface NotificationUpdate {
   notificationDatetime?: string | null;
   /** @nullable */
   notificationType?: string | null;
+}
+
+export interface Activity {
+  activityId: number;
+  tripId: number;
+  title: string;
+  activityType: string;
+  /** @nullable */
+  location?: string | null;
+  /** @nullable */
+  startTime?: string | null;
+  /** @nullable */
+  endTime?: string | null;
+  /** @nullable */
+  memo?: string | null;
+  createdAt: string;
+}
+
+export interface ActivityInput {
+  /** @maxLength 200 */
+  title: string;
+  /** @maxLength 50 */
+  activityType: string;
+  /** @maxLength 255 */
+  location?: string;
+  startTime?: string;
+  endTime?: string;
+  memo?: string;
+}
+
+export interface ActivityUpdate {
+  /** @maxLength 200 */
+  title?: string;
+  /** @maxLength 50 */
+  activityType?: string;
+  /**
+     * @maxLength 255
+     * @nullable
+     */
+  location?: string | null;
+  /** @nullable */
+  startTime?: string | null;
+  /** @nullable */
+  endTime?: string | null;
+  /** @nullable */
+  memo?: string | null;
 }
 

@@ -23,6 +23,9 @@ import type {
   Accommodation,
   AccommodationInput,
   AccommodationUpdate,
+  Activity,
+  ActivityInput,
+  ActivityUpdate,
   Budget,
   BudgetInput,
   BudgetUpdate,
@@ -2389,5 +2392,383 @@ export const useDeleteNotification = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteNotificationMutationOptions(options));
+    }
+
+export const getListActivitiesUrl = (tripId: number,) => {
+
+
+
+
+  return `/api/trips/${tripId}/activities`
+}
+
+/**
+ * @summary List activities for a trip
+ */
+export const listActivities = async (tripId: number, options?: Parameters<typeof customFetch>[1]): Promise<Activity[]> => {
+
+  return customFetch<Activity[]>(getListActivitiesUrl(tripId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListActivitiesQueryKey = (tripId: number,) => {
+    return [
+    `/api/trips/${tripId}/activities`
+    ] as const;
+    }
+
+
+export const getListActivitiesQueryOptions = <TData = Awaited<ReturnType<typeof listActivities>>, TError = ErrorType<unknown>>(tripId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listActivities>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListActivitiesQueryKey(tripId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listActivities>>> = ({ signal }) => listActivities(tripId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: tripId !== null && tripId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listActivities>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListActivitiesQueryResult = NonNullable<Awaited<ReturnType<typeof listActivities>>>
+export type ListActivitiesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List activities for a trip
+ */
+
+export function useListActivities<TData = Awaited<ReturnType<typeof listActivities>>, TError = ErrorType<unknown>>(
+ tripId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listActivities>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListActivitiesQueryOptions(tripId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateActivityUrl = (tripId: number,) => {
+
+
+
+
+  return `/api/trips/${tripId}/activities`
+}
+
+/**
+ * @summary Add activity to a trip
+ */
+export const createActivity = async (tripId: number,
+    activityInput: ActivityInput, options?: Parameters<typeof customFetch>[1]): Promise<Activity> => {
+
+  return customFetch<Activity>(getCreateActivityUrl(tripId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(activityInput)
+  }
+);}
+
+
+
+
+
+export const getCreateActivityMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createActivity>>, TError,{tripId: number;data: BodyType<ActivityInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createActivity>>, TError,{tripId: number;data: BodyType<ActivityInput>}, TContext> => {
+
+const mutationKey = ['createActivity'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createActivity>>, {tripId: number;data: BodyType<ActivityInput>}> = (props) => {
+          const {tripId,data} = props ?? {};
+
+          return  createActivity(tripId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateActivityMutationResult = NonNullable<Awaited<ReturnType<typeof createActivity>>>
+    export type CreateActivityMutationBody = BodyType<ActivityInput>
+    export type CreateActivityMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Add activity to a trip
+ */
+export const useCreateActivity = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createActivity>>, TError,{tripId: number;data: BodyType<ActivityInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createActivity>>,
+        TError,
+        {tripId: number;data: BodyType<ActivityInput>},
+        TContext
+      > => {
+      return useMutation(getCreateActivityMutationOptions(options));
+    }
+
+export const getGetActivityUrl = (tripId: number,
+    activityId: number,) => {
+
+
+
+
+  return `/api/trips/${tripId}/activities/${activityId}`
+}
+
+/**
+ * @summary Get activity detail
+ */
+export const getActivity = async (tripId: number,
+    activityId: number, options?: Parameters<typeof customFetch>[1]): Promise<Activity> => {
+
+  return customFetch<Activity>(getGetActivityUrl(tripId,activityId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetActivityQueryKey = (tripId: number,
+    activityId: number,) => {
+    return [
+    `/api/trips/${tripId}/activities/${activityId}`
+    ] as const;
+    }
+
+
+export const getGetActivityQueryOptions = <TData = Awaited<ReturnType<typeof getActivity>>, TError = ErrorType<unknown>>(tripId: number,
+    activityId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getActivity>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetActivityQueryKey(tripId,activityId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getActivity>>> = ({ signal }) => getActivity(tripId,activityId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: tripId !== null && tripId !== undefined && activityId !== null && activityId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getActivity>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetActivityQueryResult = NonNullable<Awaited<ReturnType<typeof getActivity>>>
+export type GetActivityQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get activity detail
+ */
+
+export function useGetActivity<TData = Awaited<ReturnType<typeof getActivity>>, TError = ErrorType<unknown>>(
+ tripId: number,
+    activityId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getActivity>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetActivityQueryOptions(tripId,activityId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateActivityUrl = (tripId: number,
+    activityId: number,) => {
+
+
+
+
+  return `/api/trips/${tripId}/activities/${activityId}`
+}
+
+/**
+ * @summary Update activity
+ */
+export const updateActivity = async (tripId: number,
+    activityId: number,
+    activityUpdate: ActivityUpdate, options?: Parameters<typeof customFetch>[1]): Promise<Activity> => {
+
+  return customFetch<Activity>(getUpdateActivityUrl(tripId,activityId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(activityUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateActivityMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateActivity>>, TError,{tripId: number;activityId: number;data: BodyType<ActivityUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateActivity>>, TError,{tripId: number;activityId: number;data: BodyType<ActivityUpdate>}, TContext> => {
+
+const mutationKey = ['updateActivity'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateActivity>>, {tripId: number;activityId: number;data: BodyType<ActivityUpdate>}> = (props) => {
+          const {tripId,activityId,data} = props ?? {};
+
+          return  updateActivity(tripId,activityId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateActivityMutationResult = NonNullable<Awaited<ReturnType<typeof updateActivity>>>
+    export type UpdateActivityMutationBody = BodyType<ActivityUpdate>
+    export type UpdateActivityMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update activity
+ */
+export const useUpdateActivity = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateActivity>>, TError,{tripId: number;activityId: number;data: BodyType<ActivityUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateActivity>>,
+        TError,
+        {tripId: number;activityId: number;data: BodyType<ActivityUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateActivityMutationOptions(options));
+    }
+
+export const getDeleteActivityUrl = (tripId: number,
+    activityId: number,) => {
+
+
+
+
+  return `/api/trips/${tripId}/activities/${activityId}`
+}
+
+/**
+ * @summary Delete activity
+ */
+export const deleteActivity = async (tripId: number,
+    activityId: number, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteActivityUrl(tripId,activityId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteActivityMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteActivity>>, TError,{tripId: number;activityId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteActivity>>, TError,{tripId: number;activityId: number}, TContext> => {
+
+const mutationKey = ['deleteActivity'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteActivity>>, {tripId: number;activityId: number}> = (props) => {
+          const {tripId,activityId} = props ?? {};
+
+          return  deleteActivity(tripId,activityId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteActivityMutationResult = NonNullable<Awaited<ReturnType<typeof deleteActivity>>>
+
+    export type DeleteActivityMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete activity
+ */
+export const useDeleteActivity = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteActivity>>, TError,{tripId: number;activityId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteActivity>>,
+        TError,
+        {tripId: number;activityId: number},
+        TContext
+      > => {
+      return useMutation(getDeleteActivityMutationOptions(options));
     }
 

@@ -6,11 +6,14 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface TripInput {
+export interface ActivityInput {
   /** @maxLength 200 */
   title: string;
-  tripDate: Date;
-  endDate?: Date;
+  /** @maxLength 50 */
+  activityType: string;
+  /** @maxLength 255 */
+  location?: string;
+  startTime?: Date;
+  endTime?: Date;
   memo?: string;
-  companions?: string;
 }

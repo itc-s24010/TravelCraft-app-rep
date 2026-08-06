@@ -2,7 +2,7 @@ import { useLocation, useParams, Link } from "wouter";
 import { useGetTrip, useDeleteTrip, getGetTripQueryKey, getListTripsQueryKey } from "@workspace/api-client-react";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
-import { Calendar, Users, Map, Trash2, Edit3, ArrowLeft, Train, Hotel, Wallet, Bell, Loader2 } from "lucide-react";
+import { Calendar, Users, Map, Trash2, Edit3, ArrowLeft, Train, Hotel, Wallet, Bell, Loader2, CalendarDays } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -24,6 +24,7 @@ import TransportationTab from "./tabs/TransportationTab";
 import AccommodationTab from "./tabs/AccommodationTab";
 import BudgetTab from "./tabs/BudgetTab";
 import NotificationsTab from "./tabs/NotificationsTab";
+import ScheduleTab from "./tabs/ScheduleTab";
 
 export default function TripDetail() {
   const [location, setLocation] = useLocation();
@@ -70,6 +71,7 @@ export default function TripDetail() {
 
   const tabs = [
     { label: "概要", path: `/trips/${tripId}`, icon: Map },
+    { label: "スケジュール", path: `/trips/${tripId}/schedule`, icon: CalendarDays },
     { label: "交通", path: `/trips/${tripId}/transportation`, icon: Train },
     { label: "宿泊", path: `/trips/${tripId}/accommodation`, icon: Hotel },
     { label: "予算", path: `/trips/${tripId}/budget`, icon: Wallet },
@@ -83,6 +85,7 @@ export default function TripDetail() {
 
   // Active tab content
   const getTabContent = () => {
+    if (location.startsWith(`/trips/${tripId}/schedule`)) return <ScheduleTab tripDate={trip.tripDate} endDate={trip.endDate} />;
     if (location.startsWith(`/trips/${tripId}/transportation`)) return <TransportationTab />;
     if (location.startsWith(`/trips/${tripId}/accommodation`)) return <AccommodationTab />;
     if (location.startsWith(`/trips/${tripId}/budget`) || location.startsWith(`/trips/${tripId}/expenses`)) return <BudgetTab />;

@@ -24,6 +24,7 @@ const formSchema = z.object({
   tripDate: z.date({
     required_error: "日付を選択してください。",
   }),
+  endDate: z.date().optional(),
   memo: z.string().optional(),
   companions: z.string().optional(),
 });
@@ -51,6 +52,7 @@ export default function TripNew() {
     defaultValues: {
       title: "",
       tripDate: new Date(),
+      endDate: undefined,
       memo: "",
       companions: "",
     },
@@ -61,6 +63,7 @@ export default function TripNew() {
       form.reset({
         title: trip.title,
         tripDate: new Date(trip.tripDate),
+        endDate: trip.endDate ? new Date(trip.endDate) : undefined,
         memo: trip.memo || "",
         companions: trip.companions || "",
       });
@@ -71,6 +74,7 @@ export default function TripNew() {
     const formattedData = {
       ...data,
       tripDate: format(data.tripDate, "yyyy-MM-dd"),
+      ...(data.endDate ? { endDate: format(data.endDate, "yyyy-MM-dd") } : { endDate: null as any }),
     };
 
     if (isEditing) {
@@ -172,7 +176,14 @@ export default function TripNew() {
                           <Calendar
                             mode="single"
                             selected={field.value}
-                            onSelect={field.onChange}
+                            onSelect={(date) => {
+                              field.onChange(date);
+                              // Clear endDate if it's before the new tripDate
+                              const endDate = form.getValues("endDate");
+                              if (endDate && date && endDate < date) {
+                                form.setValue("endDate", undefined);
+                              }
+                            }}
                             locale={ja}
                             initialFocus
                           />
@@ -185,18 +196,62 @@ export default function TripNew() {
 
                 <FormField
                   control={form.control}
-                  name="companions"
+                  name="endDate"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-base font-semibold">同行者（任意）</FormLabel>
-                      <FormControl>
-                        <Input placeholder="誰と行きますか？" className="h-14 rounded-xl bg-muted/20" {...field} />
-                      </FormControl>
+                    <FormItem className="flex flex-col">
+                      <FormLabel className="text-base font-semibold mb-2">終了日（任意）</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "h-14 rounded-xl px-4 text-left font-normal bg-muted/20",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "yyyy年M月d日", { locale: ja })
+                              ) : (
+                                <span>日付を選択</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-5 w-5 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 rounded-2xl" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) => {
+                              const tripDate = form.getValues("tripDate");
+                              return tripDate ? date < tripDate : false;
+                            }}
+                            locale={ja}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name="companions"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-semibold">同行者（任意）</FormLabel>
+                    <FormControl>
+                      <Input placeholder="誰と行きますか？" className="h-14 rounded-xl bg-muted/20" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 control={form.control}

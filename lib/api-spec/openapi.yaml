@@ -24,6 +24,8 @@ tags:
     description: Category operations
   - name: notification
     description: Notification operations
+  - name: activity
+    description: Activity operations
 paths:
   /healthz:
     get:
@@ -685,6 +687,121 @@ paths:
         "204":
           description: No content
 
+  # Activities
+  /trips/{tripId}/activities:
+    get:
+      operationId: listActivities
+      tags: [activity]
+      summary: List activities for a trip
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Activity"
+    post:
+      operationId: createActivity
+      tags: [activity]
+      summary: Add activity to a trip
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActivityInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Activity"
+
+  /trips/{tripId}/activities/{activityId}:
+    get:
+      operationId: getActivity
+      tags: [activity]
+      summary: Get activity detail
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: activityId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Activity"
+    patch:
+      operationId: updateActivity
+      tags: [activity]
+      summary: Update activity
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: activityId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActivityUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Activity"
+    delete:
+      operationId: deleteActivity
+      tags: [activity]
+      summary: Delete activity
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: activityId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: No content
+
 components:
   schemas:
     HealthStatus:
@@ -708,6 +825,9 @@ components:
         tripDate:
           type: string
           format: date
+        endDate:
+          type: ["string", "null"]
+          format: date
         memo:
           type: ["string", "null"]
         companions:
@@ -729,6 +849,9 @@ components:
         tripDate:
           type: string
           format: date
+        endDate:
+          type: string
+          format: date
         memo:
           type: string
         companions:
@@ -742,6 +865,9 @@ components:
           maxLength: 200
         tripDate:
           type: string
+          format: date
+        endDate:
+          type: ["string", "null"]
           format: date
         memo:
           type: ["string", "null"]
@@ -1046,4 +1172,73 @@ components:
           type: ["string", "null"]
           format: date-time
         notificationType:
+          type: ["string", "null"]
+
+    Activity:
+      type: object
+      required: [activityId, tripId, title, activityType, createdAt]
+      properties:
+        activityId:
+          type: integer
+        tripId:
+          type: integer
+        title:
+          type: string
+        activityType:
+          type: string
+        location:
+          type: ["string", "null"]
+        startTime:
+          type: ["string", "null"]
+          format: date-time
+        endTime:
+          type: ["string", "null"]
+          format: date-time
+        memo:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    ActivityInput:
+      type: object
+      required: [title, activityType]
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        activityType:
+          type: string
+          maxLength: 50
+        location:
+          type: string
+          maxLength: 255
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        memo:
+          type: string
+
+    ActivityUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        activityType:
+          type: string
+          maxLength: 50
+        location:
+          type: ["string", "null"]
+          maxLength: 255
+        startTime:
+          type: ["string", "null"]
+          format: date-time
+        endTime:
+          type: ["string", "null"]
+          format: date-time
+        memo:
           type: ["string", "null"]

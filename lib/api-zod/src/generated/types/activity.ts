@@ -6,17 +6,18 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface Trip {
+export interface Activity {
+  activityId: number;
   tripId: number;
-  userId: string;
   title: string;
-  tripDate: Date;
+  activityType: string;
   /** @nullable */
-  endDate?: Date | null;
+  location?: string | null;
+  /** @nullable */
+  startTime?: Date | null;
+  /** @nullable */
+  endTime?: Date | null;
   /** @nullable */
   memo?: string | null;
-  /** @nullable */
-  companions?: string | null;
   createdAt: Date;
-  updatedAt: Date;
 }

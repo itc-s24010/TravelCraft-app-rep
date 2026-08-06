@@ -24,6 +24,7 @@ export const ListTripsResponseItem = zod.object({
   "userId": zod.string(),
   "title": zod.string(),
   "tripDate": zod.coerce.date(),
+  "endDate": zod.coerce.date().nullish(),
   "memo": zod.string().nullish(),
   "companions": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
@@ -42,6 +43,7 @@ export const createTripBodyTitleMax = 200;
 export const CreateTripBody = zod.object({
   "title": zod.string().max(createTripBodyTitleMax),
   "tripDate": zod.coerce.date(),
+  "endDate": zod.coerce.date().optional(),
   "memo": zod.string().optional(),
   "companions": zod.string().optional()
 })
@@ -51,6 +53,7 @@ export const CreateTripResponse = zod.object({
   "userId": zod.string(),
   "title": zod.string(),
   "tripDate": zod.coerce.date(),
+  "endDate": zod.coerce.date().nullish(),
   "memo": zod.string().nullish(),
   "companions": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
@@ -70,6 +73,7 @@ export const GetTripResponse = zod.object({
   "userId": zod.string(),
   "title": zod.string(),
   "tripDate": zod.coerce.date(),
+  "endDate": zod.coerce.date().nullish(),
   "memo": zod.string().nullish(),
   "companions": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
@@ -91,6 +95,7 @@ export const updateTripBodyTitleMax = 200;
 export const UpdateTripBody = zod.object({
   "title": zod.string().max(updateTripBodyTitleMax).optional(),
   "tripDate": zod.coerce.date().optional(),
+  "endDate": zod.coerce.date().nullish(),
   "memo": zod.string().nullish(),
   "companions": zod.string().nullish()
 })
@@ -100,6 +105,7 @@ export const UpdateTripResponse = zod.object({
   "userId": zod.string(),
   "title": zod.string(),
   "tripDate": zod.coerce.date(),
+  "endDate": zod.coerce.date().nullish(),
   "memo": zod.string().nullish(),
   "companions": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
@@ -153,6 +159,7 @@ export const GetDashboardResponse = zod.object({
   "userId": zod.string(),
   "title": zod.string(),
   "tripDate": zod.coerce.date(),
+  "endDate": zod.coerce.date().nullish(),
   "memo": zod.string().nullish(),
   "companions": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
@@ -631,5 +638,133 @@ export const DeleteNotificationParams = zod.object({
 })
 
 export const DeleteNotificationResponse = zod.void()
+
+
+/**
+ * @summary List activities for a trip
+ */
+export const ListActivitiesParams = zod.object({
+  "tripId": zod.coerce.number().int()
+})
+
+export const ListActivitiesResponseItem = zod.object({
+  "activityId": zod.number().int(),
+  "tripId": zod.number().int(),
+  "title": zod.string(),
+  "activityType": zod.string(),
+  "location": zod.string().nullish(),
+  "startTime": zod.coerce.date().nullish(),
+  "endTime": zod.coerce.date().nullish(),
+  "memo": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const ListActivitiesResponse = zod.array(ListActivitiesResponseItem)
+
+
+/**
+ * @summary Add activity to a trip
+ */
+export const CreateActivityParams = zod.object({
+  "tripId": zod.coerce.number().int()
+})
+
+export const createActivityBodyTitleMax = 200;
+
+export const createActivityBodyActivityTypeMax = 50;
+
+export const createActivityBodyLocationMax = 255;
+
+
+
+export const CreateActivityBody = zod.object({
+  "title": zod.string().max(createActivityBodyTitleMax),
+  "activityType": zod.string().max(createActivityBodyActivityTypeMax),
+  "location": zod.string().max(createActivityBodyLocationMax).optional(),
+  "startTime": zod.coerce.date().optional(),
+  "endTime": zod.coerce.date().optional(),
+  "memo": zod.string().optional()
+})
+
+export const CreateActivityResponse = zod.object({
+  "activityId": zod.number().int(),
+  "tripId": zod.number().int(),
+  "title": zod.string(),
+  "activityType": zod.string(),
+  "location": zod.string().nullish(),
+  "startTime": zod.coerce.date().nullish(),
+  "endTime": zod.coerce.date().nullish(),
+  "memo": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Get activity detail
+ */
+export const GetActivityParams = zod.object({
+  "tripId": zod.coerce.number().int(),
+  "activityId": zod.coerce.number().int()
+})
+
+export const GetActivityResponse = zod.object({
+  "activityId": zod.number().int(),
+  "tripId": zod.number().int(),
+  "title": zod.string(),
+  "activityType": zod.string(),
+  "location": zod.string().nullish(),
+  "startTime": zod.coerce.date().nullish(),
+  "endTime": zod.coerce.date().nullish(),
+  "memo": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update activity
+ */
+export const UpdateActivityParams = zod.object({
+  "tripId": zod.coerce.number().int(),
+  "activityId": zod.coerce.number().int()
+})
+
+export const updateActivityBodyTitleMax = 200;
+
+export const updateActivityBodyActivityTypeMax = 50;
+
+export const updateActivityBodyLocationMax = 255;
+
+
+
+export const UpdateActivityBody = zod.object({
+  "title": zod.string().max(updateActivityBodyTitleMax).optional(),
+  "activityType": zod.string().max(updateActivityBodyActivityTypeMax).optional(),
+  "location": zod.string().max(updateActivityBodyLocationMax).nullish(),
+  "startTime": zod.coerce.date().nullish(),
+  "endTime": zod.coerce.date().nullish(),
+  "memo": zod.string().nullish()
+})
+
+export const UpdateActivityResponse = zod.object({
+  "activityId": zod.number().int(),
+  "tripId": zod.number().int(),
+  "title": zod.string(),
+  "activityType": zod.string(),
+  "location": zod.string().nullish(),
+  "startTime": zod.coerce.date().nullish(),
+  "endTime": zod.coerce.date().nullish(),
+  "memo": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete activity
+ */
+export const DeleteActivityParams = zod.object({
+  "tripId": zod.coerce.number().int(),
+  "activityId": zod.coerce.number().int()
+})
+
+export const DeleteActivityResponse = zod.void()
 
 

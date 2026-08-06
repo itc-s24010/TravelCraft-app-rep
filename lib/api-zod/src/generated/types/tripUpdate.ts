@@ -11,6 +11,8 @@ export interface TripUpdate {
   title?: string;
   tripDate?: Date;
   /** @nullable */
+  endDate?: Date | null;
+  /** @nullable */
   memo?: string | null;
   /** @nullable */
   companions?: string | null;

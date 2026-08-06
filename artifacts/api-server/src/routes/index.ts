@@ -8,6 +8,7 @@ import expensesRouter from "./expenses";
 import notificationsRouter from "./notifications";
 import categoriesRouter from "./categories";
 import dashboardRouter from "./dashboard";
+import activitiesRouter from "./activities";
 
 const router: IRouter = Router();
 
@@ -19,6 +20,7 @@ router.use("/trips/:tripId/accommodation", accommodationRouter);
 router.use("/trips/:tripId/budget", budgetRouter);
 router.use("/trips/:tripId/expenses", expensesRouter);
 router.use("/trips/:tripId/notifications", notificationsRouter);
+router.use("/trips/:tripId/activities", activitiesRouter);
 router.use("/categories", categoriesRouter);
 
 export default router;

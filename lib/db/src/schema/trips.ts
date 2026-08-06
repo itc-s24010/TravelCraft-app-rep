@@ -6,6 +6,7 @@ export const tripsTable = pgTable("trips", {
   userId: text("user_id").notNull().references(() => usersTable.userId),
   title: varchar("title", { length: 200 }).notNull(),
   tripDate: date("trip_date", { mode: "string" }).notNull(),
+  endDate: date("end_date", { mode: "string" }),
   memo: text("memo"),
   companions: varchar("companions", { length: 255 }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

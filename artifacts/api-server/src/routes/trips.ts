@@ -90,10 +90,17 @@ router.get("/:tripId", requireAuth, async (req, res) => {
 router.patch("/:tripId", requireAuth, async (req, res) => {
   const { userId } = req as AuthedRequest;
   const tripId = parseInt(req.params.tripId);
-  const { title, tripDate, memo, companions } = req.body;
+  const { title, tripDate, endDate, memo, companions } = req.body;
   const [trip] = await db
     .update(tripsTable)
-    .set({ ...(title && { title }), ...(tripDate && { tripDate }), memo, companions, updatedAt: new Date() })
+    .set({
+      ...(title && { title }),
+      ...(tripDate && { tripDate }),
+      ...(endDate !== undefined && { endDate: endDate ?? null }),
+      memo,
+      companions,
+      updatedAt: new Date(),
+    })
     .where(and(eq(tripsTable.tripId, tripId), eq(tripsTable.userId, userId), isNull(tripsTable.deletedAt)))
     .returning();
   if (!trip) { res.status(404).json({ error: "Not found" }); return; }
