@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "dev": "concurrently --names \"next,spring\" --prefix-colors \"cyan,yellow\" \"pnpm --filter @workspace/travel-next run dev\" \"cd artifacts/spring-api && mvn spring-boot:run -Dspring-boot.run.jvmArguments='-Dserver.port=8099'\"",
+    "dev": "concurrently --names \"next,spring\" --prefix-colors \"cyan,yellow\" \"pnpm --filter @workspace/travel-next run dev\" \"bash start-backend.sh\"",
     "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Use pnpm instead\" >&2; exit 1 ;; esac'",
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
     "typecheck:libs": "tsc --build",
