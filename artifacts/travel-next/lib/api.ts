@@ -34,6 +34,15 @@ async function getFreshToken(): Promise<string | null> {
   try {
     const { getFirebaseAuth } = await import("@/lib/firebase/client");
     const auth = getFirebaseAuth();
+    // Wait for Firebase to finish initialising its auth state before reading
+    // currentUser. Without this, currentUser is null on the first call right
+    // after page load and we fall back to a potentially-expired stored token.
+    // authStateReady() is a one-shot Promise (not a listener) so it is safe
+    // in environments where IndexedDB listeners can hang.
+    await Promise.race([
+      auth.authStateReady(),
+      new Promise<void>((resolve) => setTimeout(resolve, 3_000)),
+    ]);
     const user = auth.currentUser;
     if (user) {
       const token = await Promise.race([
