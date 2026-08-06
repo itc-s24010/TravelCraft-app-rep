@@ -26,6 +26,9 @@ export function SessionRefresher() {
       }
     };
 
+    // Run immediately on mount (covers the case where the stored token
+    // is already close to expiry when the page first loads)
+    refresh();
     const id = setInterval(refresh, 50 * 60 * 1000);
     return () => clearInterval(id);
   }, []);

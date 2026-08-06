@@ -21,13 +21,43 @@ export function signOutAndRedirect(): void {
   window.location.href = "/login";
 }
 
+// ─── Token helpers ─────────────────────────────────────────────────────────
+
+/**
+ * Returns the freshest available Firebase ID token.
+ * Calls getIdToken() (no force) so Firebase returns a cached token if still
+ * valid, or silently refreshes it if it is close to expiry.
+ * Falls back to the sessionStorage copy if Firebase is unavailable.
+ * Uses a 5-second timeout so a hung Firebase call never blocks the UI.
+ */
+async function getFreshToken(): Promise<string | null> {
+  try {
+    const { getFirebaseAuth } = await import("@/lib/firebase/client");
+    const auth = getFirebaseAuth();
+    const user = auth.currentUser;
+    if (user) {
+      const token = await Promise.race([
+        user.getIdToken(),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("token timeout")), 5_000)
+        ),
+      ]);
+      storeToken(token);
+      return token;
+    }
+  } catch {
+    // Firebase unavailable or timed out — fall back to stored token
+  }
+  return getStoredToken();
+}
+
 // ─── Base request ──────────────────────────────────────────────────────────
 
 async function request<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = getStoredToken();
+  const token = await getFreshToken();
   console.log("[api] request", path, "hasToken:", !!token);
 
   const headers: Record<string, string> = {
