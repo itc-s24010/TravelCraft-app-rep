@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "dev": "pnpm --filter @workspace/travel-next run dev",
-    "dev:all": "bash ./scripts/dev-all.sh",
+    "dev": "concurrently --names \"next,spring\" --prefix-colors \"cyan,yellow\" \"pnpm --filter @workspace/travel-next run dev\" \"bash start-backend.sh\"",
+    "dev:all": "pnpm dev",
     "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Use pnpm instead\" >&2; exit 1 ;; esac'",
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
     "typecheck:libs": "tsc --build",
@@ -15,6 +15,7 @@
     "@replit/connectors-sdk": "^0.4.1"
   },
   "devDependencies": {
+    "concurrently": "^10.0.4",
     "prettier": "^3.9.6",
     "typescript": "~5.9.3"
   }
