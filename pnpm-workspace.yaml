@@ -71,3 +71,6 @@ onlyBuiltDependencies:
   - unrs-resolver
 
 overrides:
+  # Pin esbuild to a single version to prevent version conflicts across
+  # different Node.js / pnpm versions in local development environments.
+  esbuild: "0.27.3"
