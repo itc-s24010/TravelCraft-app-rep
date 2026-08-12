@@ -2,6 +2,7 @@
   "name": "workspace",
   "version": "0.0.0",
   "license": "MIT",
+  "packageManager": "pnpm@10.34.5",
   "scripts": {
     "dev": "concurrently --names \"next,spring\" --prefix-colors \"cyan,yellow\" \"pnpm --filter @workspace/travel-next run dev\" \"bash start-backend.sh\"",
     "dev:all": "pnpm dev",
