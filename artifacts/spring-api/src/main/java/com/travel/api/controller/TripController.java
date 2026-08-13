@@ -44,12 +44,18 @@ public class TripController {
     public Trip create(@AuthenticationPrincipal UserPrincipal principal,
                        @RequestBody TripRequest req) {
         User user = resolveUser(principal);
+        java.time.LocalDate startDate = req.getStartDate() != null ? req.getStartDate() : req.getTripDate();
+        java.time.LocalDate endDate = req.getEndDate() != null ? req.getEndDate() : startDate;
+
         Trip trip = Trip.builder()
                 .user(user)
                 .title(req.getTitle())
-                .tripDate(req.getTripDate())
+                .tripDate(startDate)
+                .startDate(startDate)
+                .endDate(endDate)
                 .memo(req.getMemo())
                 .companions(req.getCompanions())
+                .isCompleted(req.getIsCompleted() != null ? req.getIsCompleted() : false)
                 .build();
         return tripRepository.save(trip);
     }
@@ -66,9 +72,17 @@ public class TripController {
                        @RequestBody TripRequest req) {
         Trip trip = tripAccessService.accessible(principal, tripId);
         if (req.getTitle() != null) trip.setTitle(req.getTitle());
-        if (req.getTripDate() != null) trip.setTripDate(req.getTripDate());
+        if (req.getStartDate() != null) {
+            trip.setStartDate(req.getStartDate());
+            trip.setTripDate(req.getStartDate());
+        } else if (req.getTripDate() != null) {
+            trip.setStartDate(req.getTripDate());
+            trip.setTripDate(req.getTripDate());
+        }
+        if (req.getEndDate() != null) trip.setEndDate(req.getEndDate());
         if (req.getMemo() != null) trip.setMemo(req.getMemo());
         if (req.getCompanions() != null) trip.setCompanions(req.getCompanions());
+        if (req.getIsCompleted() != null) trip.setIsCompleted(req.getIsCompleted());
         return tripRepository.save(trip);
     }
 

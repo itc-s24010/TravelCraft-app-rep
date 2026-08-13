@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { PlaneLoader } from "@/components/ui/PlaneLoader";
 
 export default function JoinSharedTripPage() {
   const { token } = useParams<{ token: string }>();
@@ -27,7 +28,9 @@ export default function JoinSharedTripPage() {
     join();
   }, [router, token]);
 
-  return <main className="min-h-screen grid place-items-center p-6 text-center">
-    <div><div className="text-4xl mb-4">✈️</div><p className="text-muted-foreground">{message}</p></div>
-  </main>;
+  return (
+    <main className="min-h-screen grid place-items-center p-6 text-center">
+      <PlaneLoader text={message} />
+    </main>
+  );
 }

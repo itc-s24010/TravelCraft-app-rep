@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { api, type Expense, type Category } from "@/lib/api";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { toast } from "sonner";
+import { PlaneLoader } from "@/components/ui/PlaneLoader";
 
 interface Props { tripId: number; categories: Category[]; onRefresh: () => void; }
 
@@ -87,7 +88,7 @@ export function ExpenseTab({ tripId, categories, onRefresh }: Props) {
     } catch { toast.error("削除に失敗しました"); }
   }
 
-  if (loading) return <div className="py-8 text-center text-muted-foreground">読み込み中...</div>;
+  if (loading) return <PlaneLoader text="読み込み中..." className="py-6" />;
 
   const inputCls = "px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50";
 

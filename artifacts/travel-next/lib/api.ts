@@ -223,6 +223,7 @@ export interface Trip {
   tripId: number; userId: number; title: string;
   tripDate?: string; memo?: string; companions?: number;
   companionNames?: string[];
+  isCompleted?: boolean;
   createdAt?: string; updatedAt?: string;
 }
 export interface ShareLink { token: string }

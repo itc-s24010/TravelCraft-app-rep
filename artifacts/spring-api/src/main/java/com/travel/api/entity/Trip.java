@@ -44,11 +44,21 @@ public class Trip {
     @Column(name = "trip_date")
     private LocalDate tripDate;
 
+    @Column(name = "start_date")
+    private LocalDate startDate;
+
+    @Column(name = "end_date")
+    private LocalDate endDate;
+
     @Column(name = "memo", columnDefinition = "TEXT")
     private String memo;
 
     @Column(name = "companions")
     private Integer companions;
+
+    @Column(name = "is_completed")
+    @JsonProperty("isCompleted")
+    private Boolean isCompleted;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

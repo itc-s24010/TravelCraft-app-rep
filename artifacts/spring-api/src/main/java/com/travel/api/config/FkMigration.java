@@ -51,6 +51,26 @@ public class FkMigration implements ApplicationRunner {
         enforcePersonalOwnership("transportation");
         enforcePersonalOwnership("accommodation");
         enforcePersonalOwnership("notification");
+        ensureIsCompletedColumn();
+        ensureTripDateColumns();
+    }
+
+    private void ensureIsCompletedColumn() {
+        try {
+            jdbc.execute("ALTER TABLE public.trips ADD COLUMN IF NOT EXISTS is_completed BOOLEAN DEFAULT FALSE;");
+        } catch (Exception e) {
+            log.warn("Failed to ensure is_completed column on trips table: {}", e.getMessage());
+        }
+    }
+
+    private void ensureTripDateColumns() {
+        try {
+            jdbc.execute("ALTER TABLE public.trips ADD COLUMN IF NOT EXISTS start_date DATE;");
+            jdbc.execute("ALTER TABLE public.trips ADD COLUMN IF NOT EXISTS end_date DATE;");
+            jdbc.execute("UPDATE public.trips SET start_date = trip_date WHERE start_date IS NULL AND trip_date IS NOT NULL;");
+        } catch (Exception e) {
+            log.warn("Failed to ensure date columns on trips table: {}", e.getMessage());
+        }
     }
 
     private void migrateBudgetUserColumn() {

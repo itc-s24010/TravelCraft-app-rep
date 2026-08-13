@@ -12,6 +12,7 @@ import { TransportationTab } from "@/components/trip/TransportationTab";
 import { AccommodationTab } from "@/components/trip/AccommodationTab";
 import { NotificationTab } from "@/components/trip/NotificationTab";
 import { ScheduleTab } from "@/components/trip/ScheduleTab";
+import { PlaneLoader } from "@/components/ui/PlaneLoader";
 
 const TABS = [
   { id: "overview", label: "概要" },
@@ -99,6 +100,18 @@ export default function TripDetailPage() {
     }
   }
 
+  async function toggleComplete() {
+    if (!trip) return;
+    try {
+      const nextState = !trip.isCompleted;
+      const updated = await api.trips.update(id, { isCompleted: nextState });
+      setTrip(updated);
+      toast.success(nextState ? "旅行を完了に設定しました" : "旅行を未完了に戻しました");
+    } catch {
+      toast.error("更新に失敗しました");
+    }
+  }
+
   async function openShare() {
     setShowShare(true);
     if (shareUrl) return;
@@ -123,11 +136,7 @@ export default function TripDetailPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin text-4xl">✈️</div>
-      </div>
-    );
+    return <PlaneLoader text="詳細情報を読み込んでいます..." />;
   }
 
   if (!trip) return <div className="text-center py-20">旅行が見つかりません</div>;
@@ -143,9 +152,24 @@ export default function TripDetailPage() {
 
       {/* Trip Header */}
       <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-2xl p-6 mb-6 border border-border">
-        <div className="flex items-start justify-between mb-2">
-          <h1 className="text-2xl font-bold">{trip.title}</h1>
+        <div className="flex items-start justify-between mb-2 gap-3 flex-wrap">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold">{trip.title}</h1>
+            {trip.isCompleted && (
+              <span className="px-2.5 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200 rounded-full">
+                ✓ 完了
+              </span>
+            )}
+          </div>
           <div className="flex gap-2">
+            <button onClick={toggleComplete}
+              className={`text-xs px-3 py-1.5 rounded-lg transition-colors font-medium ${
+                trip.isCompleted
+                  ? "bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-200"
+                  : "bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm"
+              }`}>
+              {trip.isCompleted ? "未完了に戻す" : "✓ 完了にする"}
+            </button>
             <button onClick={openShare}
               className="text-xs px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
               ↗ 共有
