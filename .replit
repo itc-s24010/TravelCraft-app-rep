@@ -24,6 +24,10 @@ args = "Spring Boot API"
 task = "workflow.run"
 args = "artifacts/travel-planner: web"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Travel Next.js"
+
 [[workflows.workflow]]
 name = "Spring Boot API"
 author = "agent"
@@ -35,6 +39,14 @@ waitForPort = 8099
 
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow]]
+name = "Travel Next.js"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd artifacts/travel-next && node_modules/.bin/next dev -p 3000 -H 0.0.0.0"
 
 [agent]
 stack = "PNPM_WORKSPACE"
