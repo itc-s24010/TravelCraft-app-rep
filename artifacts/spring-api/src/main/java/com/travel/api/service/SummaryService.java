@@ -4,10 +4,12 @@ import com.travel.api.dto.response.SummaryResponse;
 import com.travel.api.entity.Budget;
 import com.travel.api.entity.Expense;
 import com.travel.api.entity.Trip;
+import com.travel.api.entity.User;
 import com.travel.api.repository.BudgetRepository;
 import com.travel.api.repository.ExpenseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -20,9 +22,25 @@ public class SummaryService {
     private final BudgetRepository budgetRepository;
     private final ExpenseRepository expenseRepository;
 
-    public SummaryResponse getSummary(Trip trip) {
-        List<Budget> budgets = budgetRepository.findByTrip(trip);
-        List<Expense> expenses = expenseRepository.findByTripOrderByExpenseDateDesc(trip);
+    @Transactional(readOnly = true)
+    public SummaryResponse getSummary(Trip trip, User user) {
+        Long currentUserId = user.getUserId();
+        // Defense in depth: enforce ownership again after the DB query so a
+        // legacy/mis-migrated row can never enter another user's summary.
+        List<Budget> budgets = budgetRepository.findPersonal(trip.getTripId(), currentUserId)
+                .stream()
+                .filter(b -> b.getUser() != null && currentUserId.equals(b.getUser().getUserId()))
+                .filter(b -> b.getCategory() != null
+                        && b.getCategory().getUser() != null
+                        && currentUserId.equals(b.getCategory().getUser().getUserId()))
+                .toList();
+        List<Expense> expenses = expenseRepository.findPersonal(trip.getTripId(), currentUserId)
+                .stream()
+                .filter(e -> e.getUser() != null && currentUserId.equals(e.getUser().getUserId()))
+                .filter(e -> e.getCategory() != null
+                        && e.getCategory().getUser() != null
+                        && currentUserId.equals(e.getCategory().getUser().getUserId()))
+                .toList();
 
         BigDecimal totalBudget = budgets.stream()
                 .map(Budget::getBudgetAmount)

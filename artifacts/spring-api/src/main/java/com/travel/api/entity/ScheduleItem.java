@@ -9,7 +9,9 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "schedule_items")
+@Table(name = "schedule_items", indexes = {
+        @Index(name = "idx_schedule_trip_start", columnList = "trip_id,start_time")
+})
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class ScheduleItem {
 

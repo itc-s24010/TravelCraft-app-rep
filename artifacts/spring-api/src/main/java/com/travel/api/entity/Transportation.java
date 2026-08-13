@@ -7,7 +7,9 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "transportation")
+@Table(name = "transportation", indexes = {
+        @Index(name = "idx_transportation_trip_owner", columnList = "trip_id,created_by_user_id")
+})
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Transportation {
 
@@ -19,6 +21,10 @@ public class Transportation {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trip_id", nullable = false)
     private Trip trip;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by_user_id")
+    private User createdBy;
 
     @Column(name = "transportation_type")
     private String transportationType;

@@ -38,6 +38,9 @@ export default function TripDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ title: "", tripDate: "", companions: "", memo: "" });
   const [saving, setSaving] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+  const [shareUrl, setShareUrl] = useState("");
+  const [creatingShare, setCreatingShare] = useState(false);
 
   useEffect(() => { loadAll(); }, [id]);
 
@@ -96,6 +99,29 @@ export default function TripDetailPage() {
     }
   }
 
+  async function openShare() {
+    setShowShare(true);
+    if (shareUrl) return;
+    setCreatingShare(true);
+    try {
+      const { token } = await api.trips.createShareLink(id);
+      setShareUrl(`${window.location.origin}/share/${token}`);
+    } catch {
+      toast.error("共有リンクを作成できませんでした");
+    } finally {
+      setCreatingShare(false);
+    }
+  }
+
+  async function copyShareUrl() {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success("共有リンクをコピーしました");
+    } catch {
+      toast.error("コピーできませんでした。リンクを選択してコピーしてください");
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -119,16 +145,22 @@ export default function TripDetailPage() {
       <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-2xl p-6 mb-6 border border-border">
         <div className="flex items-start justify-between mb-2">
           <h1 className="text-2xl font-bold">{trip.title}</h1>
-          <button
-            onClick={startEdit}
-            className="text-xs px-3 py-1.5 border border-border rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/60 transition-colors"
-          >
-            ✏️ 編集
-          </button>
+          <div className="flex gap-2">
+            <button onClick={openShare}
+              className="text-xs px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+              ↗ 共有
+            </button>
+            <button onClick={startEdit}
+              className="text-xs px-3 py-1.5 border border-border rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/60 transition-colors">
+              ✏️ 編集
+            </button>
+          </div>
         </div>
         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
           {trip.tripDate && <span>📅 {formatDate(trip.tripDate)}</span>}
-          {trip.companions != null && <span>👥 {trip.companions}名</span>}
+          {trip.companionNames?.length ? (
+            <span>👥 {trip.companionNames.join("・")}</span>
+          ) : trip.companions != null ? <span>👥 {trip.companions}名</span> : null}
         </div>
         {trip.memo && <p className="mt-3 text-sm text-muted-foreground">{trip.memo}</p>}
 
@@ -147,6 +179,30 @@ export default function TripDetailPage() {
           </div>
         )}
       </div>
+
+      {showShare && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-5">
+            <div className="flex items-center justify-between gap-4 mb-2">
+              <h2 className="font-semibold text-lg">旅行計画を共有</h2>
+              <button onClick={() => setShowShare(false)} className="text-xl text-muted-foreground">×</button>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              このリンクを送ると、ログインした相手が旅行計画に参加できます。参加者は同じ内容を閲覧・編集できます。
+            </p>
+            {creatingShare ? (
+              <p className="text-sm py-3 text-muted-foreground">リンクを作成中...</p>
+            ) : (
+              <div className="flex gap-2">
+                <input readOnly value={shareUrl} className="min-w-0 flex-1 px-3 py-2 border border-border rounded-lg text-sm" />
+                <button onClick={copyShareUrl} disabled={!shareUrl}
+                  className="shrink-0 px-3 py-2 bg-primary text-white rounded-lg text-sm disabled:opacity-50">コピー</button>
+              </div>
+            )}
+            <p className="mt-3 text-xs text-muted-foreground">※ リンクを知っている人は参加できるため、信頼できる相手にだけ送ってください。</p>
+          </div>
+        </div>
+      )}
 
       {/* Edit Modal */}
       {isEditing && (
@@ -245,7 +301,12 @@ export default function TripDetailPage() {
                   <dd>{formatDate(trip.tripDate)}</dd>
                 </div>
               )}
-              {trip.companions != null && (
+              {trip.companionNames?.length ? (
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">同行者</dt>
+                  <dd className="text-right font-medium">{trip.companionNames.join("・")}</dd>
+                </div>
+              ) : trip.companions != null && (
                 <div className="flex justify-between">
                   <dt className="text-muted-foreground">同行者数</dt>
                   <dd>{trip.companions}名</dd>

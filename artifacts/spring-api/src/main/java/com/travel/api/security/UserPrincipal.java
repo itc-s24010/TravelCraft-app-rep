@@ -7,4 +7,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class UserPrincipal {
     private final String supabaseUserId;
+    private final String userName;
+    private final String email;
 }

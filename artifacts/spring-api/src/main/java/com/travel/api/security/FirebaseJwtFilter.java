@@ -79,7 +79,10 @@ public class FirebaseJwtFilter extends OncePerRequestFilter {
 
                 String userId = claims.getSubject();
                 if (userId != null) {
-                    UserPrincipal principal = new UserPrincipal(userId);
+                    UserPrincipal principal = new UserPrincipal(
+                            userId,
+                            claims.get("name", String.class),
+                            claims.get("email", String.class));
                     UsernamePasswordAuthenticationToken auth =
                             new UsernamePasswordAuthenticationToken(principal, null, Collections.emptyList());
                     SecurityContextHolder.getContext().setAuthentication(auth);

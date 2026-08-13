@@ -4,7 +4,6 @@ import com.travel.api.security.FirebaseJwtFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -26,7 +25,6 @@ public class SecurityConfig {
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/healthz").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/categories").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(firebaseJwtFilter, UsernamePasswordAuthenticationFilter.class);

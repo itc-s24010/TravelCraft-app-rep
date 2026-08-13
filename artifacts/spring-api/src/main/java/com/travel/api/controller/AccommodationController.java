@@ -7,6 +7,7 @@ import com.travel.api.repository.AccommodationRepository;
 import com.travel.api.repository.TripRepository;
 import com.travel.api.security.UserPrincipal;
 import com.travel.api.service.UserService;
+import com.travel.api.service.TripAccessService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,17 +24,16 @@ public class AccommodationController {
     private final TripRepository tripRepository;
     private final AccommodationRepository accommodationRepository;
     private final UserService userService;
+    private final TripAccessService tripAccessService;
 
     private Trip resolveTrip(UserPrincipal principal, Long tripId) {
-        var user = userService.ensureUser(principal.getSupabaseUserId());
-        return tripRepository.findByTripIdAndUserAndDeletedAtIsNull(tripId, user)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        return tripAccessService.accessible(principal, tripId);
     }
 
     @GetMapping
     public List<Accommodation> getAll(@AuthenticationPrincipal UserPrincipal principal,
                                        @PathVariable Long tripId) {
-        return accommodationRepository.findByTripOrderByCheckInAsc(resolveTrip(principal, tripId));
+        return accommodationRepository.findByTripAndCreatedByOrderByCheckInAsc(resolveTrip(principal, tripId), tripAccessService.currentUser(principal));
     }
 
     @PostMapping
@@ -43,6 +43,7 @@ public class AccommodationController {
                                  @RequestBody AccommodationRequest req) {
         return accommodationRepository.save(Accommodation.builder()
                 .trip(resolveTrip(principal, tripId))
+                .createdBy(tripAccessService.currentUser(principal))
                 .accommodationName(req.getAccommodationName())
                 .address(req.getAddress())
                 .checkIn(req.getCheckIn())
@@ -56,7 +57,7 @@ public class AccommodationController {
                                  @PathVariable Long tripId,
                                  @PathVariable Long id,
                                  @RequestBody AccommodationRequest req) {
-        Accommodation a = accommodationRepository.findByAccommodationIdAndTrip(id, resolveTrip(principal, tripId))
+        Accommodation a = accommodationRepository.findByAccommodationIdAndTripAndCreatedBy(id, resolveTrip(principal, tripId), tripAccessService.currentUser(principal))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (req.getAccommodationName() != null) a.setAccommodationName(req.getAccommodationName());
         if (req.getAddress() != null) a.setAddress(req.getAddress());
@@ -71,7 +72,7 @@ public class AccommodationController {
     public void delete(@AuthenticationPrincipal UserPrincipal principal,
                        @PathVariable Long tripId,
                        @PathVariable Long id) {
-        Accommodation a = accommodationRepository.findByAccommodationIdAndTrip(id, resolveTrip(principal, tripId))
+        Accommodation a = accommodationRepository.findByAccommodationIdAndTripAndCreatedBy(id, resolveTrip(principal, tripId), tripAccessService.currentUser(principal))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         accommodationRepository.delete(a);
     }

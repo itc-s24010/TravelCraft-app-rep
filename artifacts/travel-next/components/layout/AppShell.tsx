@@ -1,11 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { getFirebaseAuth } from "@/lib/firebase/client";
 import { signOut } from "firebase/auth";
-import { signOutAndRedirect } from "@/lib/api";
+import { api, signOutAndRedirect } from "@/lib/api";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
+  const [userName, setUserName] = useState("");
+
+  useEffect(() => {
+    api.users.me().then((user) => setUserName(user.userName || user.email || "ユーザー"))
+      .catch(() => setUserName(""));
+  }, []);
 
   async function handleSignOut() {
     try {
@@ -27,12 +34,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className="text-primary font-[var(--font-playfair)]">旅行計画アプリ</span>
           </Link>
 
-          <button
-            onClick={handleSignOut}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-lg hover:bg-muted"
-          >
-            ログアウト
-          </button>
+          <div className="flex items-center gap-2">
+            {userName && <span className="text-sm font-medium text-foreground">👤 {userName}</span>}
+            <button
+              onClick={handleSignOut}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-lg hover:bg-muted"
+            >
+              ログアウト
+            </button>
+          </div>
         </div>
       </header>
 
