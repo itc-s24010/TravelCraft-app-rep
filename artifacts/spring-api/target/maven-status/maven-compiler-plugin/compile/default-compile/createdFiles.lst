@@ -21,8 +21,8 @@ com/travel/api/dto/request/ScheduleItemRequest.class
 com/travel/api/repository/ScheduleItemRepository.class
 com/travel/api/entity/Expense.class
 com/travel/api/security/UserPrincipal.class
-com/travel/api/service/UserService.class
 com/travel/api/entity/Notification.class
+com/travel/api/service/UserService.class
 com/travel/api/entity/Expense$ExpenseBuilder.class
 com/travel/api/controller/TripController.class
 com/travel/api/config/DataSourceConfig.class
@@ -39,8 +39,8 @@ com/travel/api/dto/request/TransportationRequest.class
 com/travel/api/repository/BudgetRepository.class
 com/travel/api/entity/Category$CategoryBuilder.class
 com/travel/api/entity/Trip$TripBuilder.class
-com/travel/api/entity/Accommodation$AccommodationBuilder.class
 com/travel/api/repository/TransportationRepository.class
+com/travel/api/entity/Accommodation$AccommodationBuilder.class
 com/travel/api/security/FirebaseJwtFilter.class
 com/travel/api/controller/NotificationController.class
 com/travel/api/config/DataInitializer.class
@@ -50,8 +50,8 @@ com/travel/api/repository/UserRepository.class
 com/travel/api/entity/Transportation$TransportationBuilder.class
 com/travel/api/entity/Notification$NotificationBuilder.class
 com/travel/api/entity/User$UserBuilder.class
-com/travel/api/entity/Category.class
 com/travel/api/repository/ExpenseRepository.class
+com/travel/api/entity/Category.class
 com/travel/api/entity/Trip.class
 com/travel/api/dto/request/TripRequest.class
 com/travel/api/repository/AccommodationRepository.class

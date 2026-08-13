@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: travel-api
+    runtime: java
+    buildCommand: mvn clean package -DskipTests
+    startCommand: java -jar target/*.jar
+    envVars:
+      - key: JAVA_VERSION
+        value: 19
+      - key: SUPABASE_JDBC_URL
+        sync: false
+      - key: SUPABASE_DB_PASSWORD
+        sync: false
+      - key: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false

@@ -11,6 +11,7 @@ import java.util.Optional;
 public interface BudgetRepository extends JpaRepository<Budget, Long> {
     List<Budget> findByTrip(Trip trip);
     Optional<Budget> findByBudgetIdAndTrip(Long id, Trip trip);
+    boolean existsByTripAndCategory_CategoryId(Trip trip, Long categoryId);
 
     @Query("SELECT COALESCE(SUM(b.budgetAmount), 0) FROM Budget b WHERE b.trip = :trip")
     BigDecimal sumBudgetAmountByTrip(Trip trip);

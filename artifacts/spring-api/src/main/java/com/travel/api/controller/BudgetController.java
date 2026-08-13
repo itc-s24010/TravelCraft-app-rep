@@ -44,10 +44,15 @@ public class BudgetController {
     public Budget create(@AuthenticationPrincipal UserPrincipal principal,
                           @PathVariable Long tripId,
                           @RequestBody BudgetRequest req) {
+        Trip trip = resolveTrip(principal, tripId);
+        if (budgetRepository.existsByTripAndCategory_CategoryId(trip, req.getCategoryId())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "このカテゴリの予算は既に設定されています。削除してから再設定してください。");
+        }
         Category cat = categoryRepository.findById(req.getCategoryId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category not found"));
         return budgetRepository.save(Budget.builder()
-                .trip(resolveTrip(principal, tripId))
+                .trip(trip)
                 .category(cat)
                 .budgetAmount(req.getBudgetAmount())
                 .build());
