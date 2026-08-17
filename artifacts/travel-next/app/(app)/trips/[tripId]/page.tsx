@@ -14,11 +14,11 @@ import { NotificationTab } from "@/components/trip/NotificationTab";
 import { ScheduleTab } from "@/components/trip/ScheduleTab";
 import { PlaneLoader } from "@/components/ui/PlaneLoader";
 
-const TABS = [
+const ALL_TABS = [
   { id: "overview", label: "概要" },
   { id: "schedule", label: "スケジュール" },
-  { id: "budget", label: "予算" },
-  { id: "expenses", label: "支出" },
+  { id: "budget", label: "予算", ownerOnly: true },
+  { id: "expenses", label: "支出", ownerOnly: true },
   { id: "transportation", label: "交通" },
   { id: "accommodation", label: "宿泊" },
   { id: "notifications", label: "通知" },
@@ -150,6 +150,8 @@ export default function TripDetailPage() {
 
   const stayLabel = calcStayLabel(trip.startDate ?? trip.tripDate, trip.endDate ?? trip.startDate ?? trip.tripDate);
   const hasDateRange = trip.startDate && trip.endDate && trip.startDate !== trip.endDate;
+  // 共有メンバー（オーナー以外）には予算・支出タブを非表示
+  const visibleTabs = ALL_TABS.filter(t => !t.ownerOnly || trip.isOwner !== false);
 
   return (
     <div>
@@ -330,7 +332,7 @@ export default function TripDetailPage() {
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6 bg-muted/50 rounded-xl p-1 overflow-x-auto">
-        {TABS.map((tab) => (
+        {visibleTabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
@@ -397,7 +399,7 @@ export default function TripDetailPage() {
               )}
             </dl>
           </div>
-          {summary && (
+          {summary && trip.isOwner !== false && (
             <div className="bg-white rounded-xl border border-border p-4">
               <h3 className="font-semibold mb-2 text-secondary">カテゴリ別予算</h3>
               <div className="space-y-2">

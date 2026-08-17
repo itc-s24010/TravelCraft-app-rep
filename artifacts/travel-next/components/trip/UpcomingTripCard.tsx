@@ -22,7 +22,8 @@ export function UpcomingTripCard({ trips }: UpcomingTripCardProps) {
   const upcomingTrip = getClosestTrip(trips);
   const [countdown, setCountdown] = useState<Countdown | null>(null);
 
-  const tripDateStr = upcomingTrip?.tripDate;
+  // 開始日を優先、なければ tripDate を使用
+  const tripDateStr = upcomingTrip?.startDate ?? upcomingTrip?.tripDate;
   const tripId = upcomingTrip?.tripId;
 
   useEffect(() => {

@@ -36,7 +36,10 @@ public class TripController {
 
     @GetMapping
     public List<Trip> getAll(@AuthenticationPrincipal UserPrincipal principal) {
-        return tripRepository.findAccessibleByUser(resolveUser(principal));
+        User current = resolveUser(principal);
+        List<Trip> trips = tripRepository.findAccessibleByUser(current);
+        trips.forEach(t -> t.setIsOwner(t.getUser().getUserId().equals(current.getUserId())));
+        return trips;
     }
 
     @PostMapping
@@ -57,19 +60,25 @@ public class TripController {
                 .companions(req.getCompanions())
                 .isCompleted(req.getIsCompleted() != null ? req.getIsCompleted() : false)
                 .build();
-        return tripRepository.save(trip);
+        Trip saved = tripRepository.save(trip);
+        saved.setIsOwner(true); // creator is always the owner
+        return saved;
     }
 
     @GetMapping("/{tripId}")
     public Trip getOne(@AuthenticationPrincipal UserPrincipal principal,
                        @PathVariable Long tripId) {
-        return tripAccessService.accessible(principal, tripId);
+        User current = resolveUser(principal);
+        Trip trip = tripAccessService.accessible(principal, tripId);
+        trip.setIsOwner(trip.getUser().getUserId().equals(current.getUserId()));
+        return trip;
     }
 
     @PatchMapping("/{tripId}")
     public Trip update(@AuthenticationPrincipal UserPrincipal principal,
                        @PathVariable Long tripId,
                        @RequestBody TripRequest req) {
+        User current = resolveUser(principal);
         Trip trip = tripAccessService.accessible(principal, tripId);
         if (req.getTitle() != null) trip.setTitle(req.getTitle());
         if (req.getStartDate() != null) {
@@ -83,7 +92,9 @@ public class TripController {
         if (req.getMemo() != null) trip.setMemo(req.getMemo());
         if (req.getCompanions() != null) trip.setCompanions(req.getCompanions());
         if (req.getIsCompleted() != null) trip.setIsCompleted(req.getIsCompleted());
-        return tripRepository.save(trip);
+        Trip saved = tripRepository.save(trip);
+        saved.setIsOwner(saved.getUser().getUserId().equals(current.getUserId()));
+        return saved;
     }
 
     @DeleteMapping("/{tripId}")

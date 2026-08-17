@@ -225,6 +225,7 @@ export interface Trip {
   memo?: string; companions?: number;
   companionNames?: string[];
   isCompleted?: boolean;
+  isOwner?: boolean;
   createdAt?: string; updatedAt?: string;
 }
 export interface ShareLink { token: string }

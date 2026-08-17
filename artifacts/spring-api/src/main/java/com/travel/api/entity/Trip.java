@@ -60,6 +60,11 @@ public class Trip {
     @JsonProperty("isCompleted")
     private Boolean isCompleted;
 
+    /** Set by controllers at query-time; not persisted. */
+    @Transient
+    @JsonProperty("isOwner")
+    private Boolean isOwner;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private OffsetDateTime createdAt;
