@@ -1,3 +1,4 @@
 - [Travel Planner architecture](travel-planner-arch.md) — フルスタック旅行計画アプリの構成・主要決定事項
 - [Supabase pooler connection](supabase-pooler-connection.md) — Java cannot reach db.{ref}.supabase.co (IPv6-only); must use Transaction Pooler via DataSourceConfig rewrite
 - [Firebase auth listeners hang in Replit preview](app-layout-firebase-hang.md) — onAuthStateChanged/onIdTokenChanged hang; use sessionStorage token + server-side logout route instead
+- [Replit Next.js proxy routing with path prefix](replit-nextjs-proxy-routing.md) — basePath + [[ports]] + nextUrl.clone() の3点セットが必要

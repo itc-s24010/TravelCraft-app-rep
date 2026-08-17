@@ -18,7 +18,11 @@ export async function middleware(request: NextRequest) {
   // clearing the cookie.  The login page itself handles the already-logged-in
   // case client-side.
   if (!session && !isPublic) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    // Use nextUrl.clone() so basePath is preserved when running behind
+    // a path-prefixed proxy (e.g. Replit preview at /travel-next/).
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = "/login";
+    return NextResponse.redirect(loginUrl);
   }
 
   return NextResponse.next();

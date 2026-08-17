@@ -8,6 +8,10 @@ deploymentTarget = "autoscale"
 args = ["pnpm", "store", "prune"]
 env = { "CI" = "true" }
 
+[[ports]]
+localPort = 8081
+externalPort = 3001
+
 [workflows]
 runButton = "Project"
 
@@ -22,7 +26,7 @@ args = "Spring Boot API"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "artifacts/travel-planner: web"
+args = "artifacts/travel-next: Next.js Dev Server"
 
 [[workflows.workflow]]
 name = "Spring Boot API"

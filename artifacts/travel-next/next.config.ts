@@ -9,6 +9,10 @@ const springApiBase =
   `http://localhost:${process.env.SPRING_API_PORT || 8099}`;
 
 const nextConfig: NextConfig = {
+  // Replit preview proxy forwards the full /travel-next prefix to Next.js,
+  // so basePath must match. Vercel serves from root, so leave NEXT_PUBLIC_BASE_PATH unset there.
+  basePath: process.env.NEXT_PUBLIC_BASE_PATH || "",
+
   // Allow Replit's proxied preview domains so JS/CSS assets load correctly
   allowedDevOrigins: ["*.replit.dev", "*.pike.replit.dev", "*.repl.co", "127.0.0.1"],
 

@@ -10,6 +10,7 @@ paths = ["/travel-next"]
 
 [services.env]
 PORT = "3000"
+NEXT_PUBLIC_BASE_PATH = "/travel-next"
 
 [services.development]
-run = "pnpm --filter @workspace/travel-next run dev"
+run = "bash -c 'cd /home/runner/workspace/artifacts/travel-next && node_modules/.bin/next dev -p ${PORT:-3000} -H 0.0.0.0'"
