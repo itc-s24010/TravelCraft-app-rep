@@ -7,6 +7,7 @@ import { api, type Trip, type Summary, type Category } from "@/lib/api";
 import { formatCurrency, formatDate, calcStayLabel } from "@/lib/utils";
 import { toast } from "sonner";
 import { BudgetTab } from "@/components/trip/BudgetTab";
+import { BudgetPieChart } from "@/components/trip/BudgetPieChart";
 import { ExpenseTab } from "@/components/trip/ExpenseTab";
 import { TransportationTab } from "@/components/trip/TransportationTab";
 import { AccommodationTab } from "@/components/trip/AccommodationTab";
@@ -401,25 +402,8 @@ export default function TripDetailPage() {
           </div>
           {summary && trip.isOwner !== false && (
             <div className="bg-white rounded-xl border border-border p-4">
-              <h3 className="font-semibold mb-2 text-secondary">カテゴリ別予算</h3>
-              <div className="space-y-2">
-                {summary.categoryBreakdown.filter(c => c.budget > 0 || c.expense > 0).map((c) => (
-                  <div key={c.categoryId}>
-                    <div className="flex justify-between text-xs mb-1">
-                      <span>{c.categoryName}</span>
-                      <span className="text-muted-foreground">
-                        {formatCurrency(c.expense)} / {formatCurrency(c.budget)}
-                      </span>
-                    </div>
-                    <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-primary rounded-full transition-all"
-                        style={{ width: `${Math.min(100, c.budget > 0 ? (c.expense / c.budget) * 100 : 0)}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <h3 className="font-semibold mb-3 text-secondary">カテゴリ別支出</h3>
+              <BudgetPieChart breakdown={summary.categoryBreakdown} />
             </div>
           )}
         </div>
