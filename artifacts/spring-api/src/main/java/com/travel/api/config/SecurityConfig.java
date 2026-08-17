@@ -30,7 +30,6 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/healthz").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/api/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/categories").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(firebaseJwtFilter, UsernamePasswordAuthenticationFilter.class);

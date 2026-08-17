@@ -33,3 +33,24 @@
     -webkit-font-smoothing: antialiased;
   }
 }
+
+@keyframes fly-east {
+  0% {
+    transform: translateX(-120%);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+}
+
+.animate-fly-east {
+  animation: fly-east 2s ease-in-out infinite;
+}

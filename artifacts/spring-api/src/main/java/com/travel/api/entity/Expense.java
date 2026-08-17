@@ -7,7 +7,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "expense")
+@Table(name = "expense", indexes = {
+    @Index(name = "idx_expense_trip_user", columnList = "trip_id,user_id")
+})
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Expense {
 
@@ -19,6 +21,10 @@ public class Expense {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trip_id", nullable = false)
     private Trip trip;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)

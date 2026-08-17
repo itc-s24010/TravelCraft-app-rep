@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { api, type Budget, type Category, type Summary } from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
+import { PlaneLoader } from "@/components/ui/PlaneLoader";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 const COLORS = ["#f97316","#0d9488","#8b5cf6","#ec4899","#f59e0b","#6366f1"];
@@ -91,7 +92,7 @@ export function BudgetTab({ tripId, categories, summary, onRefresh }: Props) {
   const usedCategories = new Set(budgets.map((b) => b.category?.categoryId ?? b.categoryId));
   const availableCategories = categories.filter((c) => !usedCategories.has(c.categoryId));
 
-  if (loading) return <div className="py-8 text-center text-muted-foreground">読み込み中...</div>;
+  if (loading) return <PlaneLoader text="読み込み中..." className="py-6" />;
 
   return (
     <div className="space-y-6">

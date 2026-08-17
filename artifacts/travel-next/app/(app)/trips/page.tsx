@@ -5,6 +5,8 @@ import Link from "next/link";
 import { api, type Trip } from "@/lib/api";
 import { formatDate } from "@/lib/utils";
 import { toast } from "sonner";
+import { PlaneLoader } from "@/components/ui/PlaneLoader";
+import { UpcomingTripCard } from "@/components/trip/UpcomingTripCard";
 
 export default function TripsPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
@@ -72,6 +74,17 @@ export default function TripsPage() {
     }
   }
 
+  async function handleToggleComplete(trip: Trip) {
+    try {
+      const nextCompleted = !trip.isCompleted;
+      await api.trips.update(trip.tripId, { isCompleted: nextCompleted });
+      toast.success(nextCompleted ? "旅行を完了に設定しました" : "旅行を未完了に戻しました");
+      setTrips(trips.map((t) => (t.tripId === trip.tripId ? { ...t, isCompleted: nextCompleted } : t)));
+    } catch {
+      toast.error("更新に失敗しました");
+    }
+  }
+
   if (authError) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
@@ -87,15 +100,14 @@ export default function TripsPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin text-4xl">✈️</div>
-      </div>
-    );
+    return <PlaneLoader text="旅行計画を読み込んでいます..." />;
   }
 
   return (
     <div>
+      {/* 直近の旅行 */}
+      <UpcomingTripCard trips={trips} />
+
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">旅行一覧</h1>
         <button
@@ -161,36 +173,62 @@ export default function TripsPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {trips.map((trip) => (
             <div key={trip.tripId}
-              className="bg-white rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow p-5 group">
-              <div className="flex items-start justify-between mb-3">
-                <Link href={`/trips/${trip.tripId}`}
-                  className="text-lg font-semibold text-foreground hover:text-primary transition-colors line-clamp-1">
-                  {trip.title}
-                </Link>
-                <button onClick={() => handleDelete(trip.tripId)}
-                  className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all text-sm">
-                  削除
-                </button>
+              className={`rounded-xl border shadow-sm hover:shadow-md transition-all p-5 group flex flex-col justify-between ${
+                trip.isCompleted ? "bg-muted/40 border-muted text-muted-foreground" : "bg-white border-border"
+              }`}>
+              <div>
+                <div className="flex items-start justify-between mb-3 gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Link href={`/trips/${trip.tripId}`}
+                      className={`text-lg font-semibold transition-colors line-clamp-1 ${
+                        trip.isCompleted ? "line-through text-muted-foreground hover:text-foreground" : "text-foreground hover:text-primary"
+                      }`}>
+                      {trip.title}
+                    </Link>
+                    {trip.isCompleted && (
+                      <span className="px-2 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 rounded-md">
+                        ✓ 完了
+                      </span>
+                    )}
+                  </div>
+                  <button onClick={() => handleDelete(trip.tripId)}
+                    className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all text-sm shrink-0">
+                    削除
+                  </button>
+                </div>
+                {trip.tripDate && (
+                  <p className="text-sm text-muted-foreground mb-1">
+                    📅 {formatDate(trip.tripDate)}
+                  </p>
+                )}
+                {trip.companions !== undefined && trip.companions !== null && (
+                  <p className="text-sm text-muted-foreground mb-1">
+                    👥 {trip.companions}名
+                  </p>
+                )}
+                {trip.memo && (
+                  <p className="text-sm text-muted-foreground line-clamp-2 mt-2">
+                    {trip.memo}
+                  </p>
+                )}
               </div>
-              {trip.tripDate && (
-                <p className="text-sm text-muted-foreground mb-1">
-                  📅 {formatDate(trip.tripDate)}
-                </p>
-              )}
-              {trip.companions !== undefined && trip.companions !== null && (
-                <p className="text-sm text-muted-foreground mb-1">
-                  👥 {trip.companions}名
-                </p>
-              )}
-              {trip.memo && (
-                <p className="text-sm text-muted-foreground line-clamp-2 mt-2">
-                  {trip.memo}
-                </p>
-              )}
-              <Link href={`/trips/${trip.tripId}`}
-                className="mt-4 inline-block text-sm text-primary font-medium hover:underline">
-                詳細を見る →
-              </Link>
+
+              <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/50">
+                <button
+                  onClick={() => handleToggleComplete(trip)}
+                  className={`text-xs font-medium px-2.5 py-1 rounded-md transition-colors ${
+                    trip.isCompleted
+                      ? "bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-300"
+                      : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200"
+                  }`}
+                >
+                  {trip.isCompleted ? "未完了に戻す" : "✓ 完了にする"}
+                </button>
+                <Link href={`/trips/${trip.tripId}`}
+                  className="text-sm text-primary font-medium hover:underline">
+                  詳細を見る →
+                </Link>
+              </div>
             </div>
           ))}
         </div>

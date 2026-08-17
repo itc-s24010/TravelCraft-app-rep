@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { api, type ScheduleItem } from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
+import { PlaneLoader } from "@/components/ui/PlaneLoader";
 
 interface Props { tripId: number; }
 
@@ -124,7 +125,7 @@ export function ScheduleTab({ tripId }: Props) {
     } catch { toast.error("削除に失敗しました"); }
   }
 
-  if (loading) return <div className="py-8 text-center text-muted-foreground">読み込み中...</div>;
+  if (loading) return <PlaneLoader text="読み込み中..." className="py-6" />;
 
   const inputCls = "w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50";
 

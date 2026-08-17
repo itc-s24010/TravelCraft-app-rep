@@ -7,6 +7,7 @@ import com.travel.api.repository.ScheduleItemRepository;
 import com.travel.api.repository.TripRepository;
 import com.travel.api.security.UserPrincipal;
 import com.travel.api.service.UserService;
+import com.travel.api.service.TripAccessService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,11 +24,10 @@ public class ScheduleItemController {
     private final TripRepository tripRepository;
     private final ScheduleItemRepository scheduleItemRepository;
     private final UserService userService;
+    private final TripAccessService tripAccessService;
 
     private Trip resolveTrip(UserPrincipal principal, Long tripId) {
-        var user = userService.ensureUser(principal.getSupabaseUserId());
-        return tripRepository.findByTripIdAndUserAndDeletedAtIsNull(tripId, user)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        return tripAccessService.accessible(principal, tripId);
     }
 
     @GetMapping

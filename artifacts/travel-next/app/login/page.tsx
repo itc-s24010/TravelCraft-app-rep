@@ -5,7 +5,9 @@ import { getFirebaseAuth } from "@/lib/firebase/client";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  updateProfile,
 } from "firebase/auth";
+import { api } from "@/lib/api";
 
 export default function LoginPage() {
   // A token can outlive the session cookie (for example after a server restart).
@@ -18,13 +20,16 @@ export default function LoginPage() {
       .some((cookie) => cookie.startsWith("__session=1"));
 
     if (hasToken && hasSessionCookie) {
-      window.location.href = "/trips";
+      const pendingToken = sessionStorage.getItem("__pending_share_token");
+      sessionStorage.removeItem("__pending_share_token");
+      window.location.href = pendingToken ? `/share/${pendingToken}` : "/trips";
     } else if (hasToken) {
       sessionStorage.removeItem("__firebase_token");
     }
   }, []);
 
   const [email, setEmail] = useState("");
+  const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -36,19 +41,32 @@ export default function LoginPage() {
     setError("");
 
     try {
+      if (isSignUp && !userName.trim()) {
+        setError("表示名を入力してください。");
+        return;
+      }
       const auth = getFirebaseAuth();
       if (isSignUp) {
-        await createUserWithEmailAndPassword(auth, email, password);
+        const credential = await createUserWithEmailAndPassword(auth, email, password);
+        await updateProfile(credential.user, { displayName: userName.trim() });
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }
       // Get the Firebase ID token and store it for API calls
-      const idToken = await auth.currentUser!.getIdToken();
+      const idToken = await auth.currentUser!.getIdToken(isSignUp);
       sessionStorage.setItem("__firebase_token", idToken);
       // Set session cookie so middleware can detect auth state
       document.cookie = "__session=1; path=/; max-age=604800; SameSite=Lax";
-      // Hard redirect so sessionStorage is available immediately on the next page
-      window.location.href = "/trips";
+      // Firebase may not include a newly-set display name in its first ID token.
+      // Persist it explicitly so the navigation bar can show it immediately.
+      if (isSignUp) {
+        await api.users.update({ userName: userName.trim() });
+      }
+      // Hard redirect so sessionStorage is available immediately on the next page.
+      // A visitor arriving via a share link resumes that invitation after login.
+      const pendingToken = sessionStorage.getItem("__pending_share_token");
+      sessionStorage.removeItem("__pending_share_token");
+      window.location.href = pendingToken ? `/share/${pendingToken}` : "/trips";
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? "";
       if (code === "auth/email-already-in-use") {
@@ -91,6 +109,21 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
+              {isSignUp && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-foreground mb-1">
+                    表示名
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={userName}
+                    onChange={(e) => setUserName(e.target.value)}
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    placeholder="例：山田 花子"
+                  />
+                </div>
+              )}
               <label className="block text-sm font-medium text-foreground mb-1">
                 メールアドレス
               </label>

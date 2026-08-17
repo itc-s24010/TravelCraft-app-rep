@@ -6,7 +6,9 @@ import lombok.*;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "notification")
+@Table(name = "notification", indexes = {
+        @Index(name = "idx_notification_trip_owner", columnList = "trip_id,created_by_user_id")
+})
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Notification {
 
@@ -18,6 +20,10 @@ public class Notification {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trip_id", nullable = false)
     private Trip trip;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by_user_id")
+    private User createdBy;
 
     @Column(name = "reminder", columnDefinition = "TEXT")
     private String reminder;

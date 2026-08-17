@@ -7,6 +7,7 @@ import com.travel.api.repository.TransportationRepository;
 import com.travel.api.repository.TripRepository;
 import com.travel.api.security.UserPrincipal;
 import com.travel.api.service.UserService;
+import com.travel.api.service.TripAccessService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,17 +24,16 @@ public class TransportationController {
     private final TripRepository tripRepository;
     private final TransportationRepository transportationRepository;
     private final UserService userService;
+    private final TripAccessService tripAccessService;
 
     private Trip resolveTrip(UserPrincipal principal, Long tripId) {
-        var user = userService.ensureUser(principal.getSupabaseUserId());
-        return tripRepository.findByTripIdAndUserAndDeletedAtIsNull(tripId, user)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        return tripAccessService.accessible(principal, tripId);
     }
 
     @GetMapping
     public List<Transportation> getAll(@AuthenticationPrincipal UserPrincipal principal,
                                         @PathVariable Long tripId) {
-        return transportationRepository.findByTripOrderByDepartureTimeAsc(resolveTrip(principal, tripId));
+        return transportationRepository.findByTripAndCreatedByOrderByDepartureTimeAsc(resolveTrip(principal, tripId), tripAccessService.currentUser(principal));
     }
 
     @PostMapping
@@ -44,6 +44,7 @@ public class TransportationController {
         Trip trip = resolveTrip(principal, tripId);
         return transportationRepository.save(Transportation.builder()
                 .trip(trip)
+                .createdBy(tripAccessService.currentUser(principal))
                 .transportationType(req.getTransportationType())
                 .departurePlace(req.getDeparturePlace())
                 .arrivalPlace(req.getArrivalPlace())
@@ -57,7 +58,7 @@ public class TransportationController {
     public Transportation getOne(@AuthenticationPrincipal UserPrincipal principal,
                                   @PathVariable Long tripId,
                                   @PathVariable Long id) {
-        return transportationRepository.findByTransportationIdAndTrip(id, resolveTrip(principal, tripId))
+        return transportationRepository.findByTransportationIdAndTripAndCreatedBy(id, resolveTrip(principal, tripId), tripAccessService.currentUser(principal))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
@@ -66,7 +67,7 @@ public class TransportationController {
                                   @PathVariable Long tripId,
                                   @PathVariable Long id,
                                   @RequestBody TransportationRequest req) {
-        Transportation t = transportationRepository.findByTransportationIdAndTrip(id, resolveTrip(principal, tripId))
+        Transportation t = transportationRepository.findByTransportationIdAndTripAndCreatedBy(id, resolveTrip(principal, tripId), tripAccessService.currentUser(principal))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (req.getTransportationType() != null) t.setTransportationType(req.getTransportationType());
         if (req.getDeparturePlace() != null) t.setDeparturePlace(req.getDeparturePlace());
@@ -82,7 +83,7 @@ public class TransportationController {
     public void delete(@AuthenticationPrincipal UserPrincipal principal,
                        @PathVariable Long tripId,
                        @PathVariable Long id) {
-        Transportation t = transportationRepository.findByTransportationIdAndTrip(id, resolveTrip(principal, tripId))
+        Transportation t = transportationRepository.findByTransportationIdAndTripAndCreatedBy(id, resolveTrip(principal, tripId), tripAccessService.currentUser(principal))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         transportationRepository.delete(t);
     }

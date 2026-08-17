@@ -35,6 +35,220 @@ public class FkMigration implements ApplicationRunner {
         // category (singular) → categories (plural)
         fixFk("budget",         "budget_category_id_fkey",     "category_id", "category", "categories", "category_id");
         fixFk("expense",        "expense_category_id_fkey",    "category_id", "category", "categories", "category_id");
+
+        // Preserve existing personal records by assigning them to the trip owner
+        // when the per-user ownership columns are introduced.
+        migrateBudgetUserColumn();
+        migrateExpenseUserColumn();
+        backfillBudgetUser();
+        backfillExpenseUser();
+        migrateCategoryOwnership();
+        backfillOwner("transportation");
+        backfillOwner("accommodation");
+        backfillOwner("notification");
+        enforceBudgetUser();
+        enforceExpenseUser();
+        enforcePersonalOwnership("transportation");
+        enforcePersonalOwnership("accommodation");
+        enforcePersonalOwnership("notification");
+        ensureIsCompletedColumn();
+        ensureTripDateColumns();
+    }
+
+    private void ensureIsCompletedColumn() {
+        try {
+            jdbc.execute("ALTER TABLE public.trips ADD COLUMN IF NOT EXISTS is_completed BOOLEAN DEFAULT FALSE;");
+        } catch (Exception e) {
+            log.warn("Failed to ensure is_completed column on trips table: {}", e.getMessage());
+        }
+    }
+
+    private void ensureTripDateColumns() {
+        try {
+            jdbc.execute("ALTER TABLE public.trips ADD COLUMN IF NOT EXISTS start_date DATE;");
+            jdbc.execute("ALTER TABLE public.trips ADD COLUMN IF NOT EXISTS end_date DATE;");
+            jdbc.execute("UPDATE public.trips SET start_date = trip_date WHERE start_date IS NULL AND trip_date IS NOT NULL;");
+        } catch (Exception e) {
+            log.warn("Failed to ensure date columns on trips table: {}", e.getMessage());
+        }
+    }
+
+    private void migrateBudgetUserColumn() {
+        try {
+            Integer oldColumn = jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='public' AND table_name='budget' AND column_name='created_by_user_id'", Integer.class);
+            Integer newColumn = jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='public' AND table_name='budget' AND column_name='user_id'", Integer.class);
+            if ((newColumn == null || newColumn == 0) && oldColumn != null && oldColumn > 0) {
+                jdbc.execute("ALTER TABLE public.budget RENAME COLUMN created_by_user_id TO user_id");
+                jdbc.execute("ALTER INDEX IF EXISTS idx_budget_trip_owner RENAME TO idx_budget_trip_user");
+            } else if (newColumn != null && newColumn > 0 && oldColumn != null && oldColumn > 0) {
+                jdbc.execute("UPDATE public.budget SET user_id = created_by_user_id WHERE user_id IS NULL");
+                jdbc.execute("ALTER TABLE public.budget DROP COLUMN created_by_user_id");
+            }
+        } catch (Exception e) {
+            log.warn("[FkMigration] Could not migrate budget owner column: {}", e.getMessage());
+        }
+    }
+
+    private void migrateExpenseUserColumn() {
+        try {
+            Integer oldColumn = jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='public' AND table_name='expense' AND column_name='created_by_user_id'", Integer.class);
+            Integer newColumn = jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='public' AND table_name='expense' AND column_name='user_id'", Integer.class);
+            if ((newColumn == null || newColumn == 0) && oldColumn != null && oldColumn > 0) {
+                jdbc.execute("ALTER TABLE public.expense RENAME COLUMN created_by_user_id TO user_id");
+                jdbc.execute("ALTER INDEX IF EXISTS idx_expense_trip_owner RENAME TO idx_expense_trip_user");
+            } else if (newColumn != null && newColumn > 0 && oldColumn != null && oldColumn > 0) {
+                jdbc.execute("UPDATE public.expense SET user_id = created_by_user_id WHERE user_id IS NULL");
+                jdbc.execute("ALTER TABLE public.expense DROP COLUMN created_by_user_id");
+            } else if (newColumn == null || newColumn == 0) {
+                jdbc.execute("ALTER TABLE public.expense ADD COLUMN user_id bigint");
+            }
+        } catch (Exception e) {
+            log.warn("[FkMigration] Could not migrate expense user column: {}", e.getMessage());
+        }
+    }
+
+    private void backfillOwner(String table) {
+        try {
+            jdbc.execute("UPDATE public." + table + " x SET created_by_user_id = t.user_id " +
+                    "FROM public.trips t WHERE x.trip_id = t.trip_id AND x.created_by_user_id IS NULL");
+        } catch (Exception e) {
+            log.debug("[FkMigration] Owner backfill skipped for {}: {}", table, e.getMessage());
+        }
+    }
+
+    private void backfillBudgetUser() {
+        try {
+            jdbc.execute("UPDATE public.budget x SET user_id = t.user_id " +
+                    "FROM public.trips t WHERE x.trip_id = t.trip_id AND x.user_id IS NULL");
+        } catch (Exception e) {
+            log.debug("[FkMigration] Budget user backfill skipped: {}", e.getMessage());
+        }
+    }
+
+    private void backfillExpenseUser() {
+        try {
+            jdbc.execute("UPDATE public.expense x SET user_id = t.user_id " +
+                    "FROM public.trips t WHERE x.trip_id = t.trip_id AND x.user_id IS NULL");
+        } catch (Exception e) {
+            log.debug("[FkMigration] Expense user backfill skipped: {}", e.getMessage());
+        }
+    }
+
+    private void migrateCategoryOwnership() {
+        try {
+            jdbc.execute("ALTER TABLE public.categories ADD COLUMN IF NOT EXISTS user_id bigint");
+            jdbc.execute("""
+                    DO $$
+                    DECLARE
+                      user_rec record;
+                      category_rec record;
+                      budget_rec record;
+                      expense_rec record;
+                      owned_category_id bigint;
+                    BEGIN
+                      FOR user_rec IN SELECT user_id FROM public.users LOOP
+                        FOR category_rec IN
+                          SELECT category_name FROM (
+                            VALUES ('交通費'), ('宿泊費'), ('食費'), ('観光・体験'), ('お土産'), ('その他')
+                          ) default_names(category_name)
+                          UNION
+                          SELECT category_name FROM public.categories WHERE user_id IS NULL
+                        LOOP
+                          IF NOT EXISTS (
+                            SELECT 1 FROM public.categories
+                            WHERE user_id = user_rec.user_id AND category_name = category_rec.category_name
+                          ) THEN
+                            INSERT INTO public.categories (user_id, category_name)
+                            VALUES (user_rec.user_id, category_rec.category_name);
+                          END IF;
+                        END LOOP;
+                      END LOOP;
+
+                      FOR budget_rec IN
+                        SELECT b.budget_id, b.user_id, c.category_name
+                        FROM public.budget b
+                        JOIN public.categories c ON c.category_id = b.category_id
+                        WHERE b.user_id IS NOT NULL
+                          AND (c.user_id IS NULL OR c.user_id <> b.user_id)
+                      LOOP
+                        SELECT category_id INTO owned_category_id
+                        FROM public.categories
+                        WHERE user_id = budget_rec.user_id AND category_name = budget_rec.category_name
+                        ORDER BY category_id
+                        LIMIT 1;
+
+                        IF owned_category_id IS NOT NULL THEN
+                          UPDATE public.budget SET category_id = owned_category_id
+                          WHERE budget_id = budget_rec.budget_id;
+                        END IF;
+                      END LOOP;
+
+                      FOR expense_rec IN
+                        SELECT e.expense_id, e.user_id, c.category_name
+                        FROM public.expense e
+                        JOIN public.categories c ON c.category_id = e.category_id
+                        WHERE e.user_id IS NOT NULL
+                          AND (c.user_id IS NULL OR c.user_id <> e.user_id)
+                      LOOP
+                        SELECT category_id INTO owned_category_id
+                        FROM public.categories
+                        WHERE user_id = expense_rec.user_id AND category_name = expense_rec.category_name
+                        ORDER BY category_id
+                        LIMIT 1;
+
+                        IF owned_category_id IS NOT NULL THEN
+                          UPDATE public.expense SET category_id = owned_category_id
+                          WHERE expense_id = expense_rec.expense_id;
+                        END IF;
+                      END LOOP;
+
+                      DELETE FROM public.categories c
+                      WHERE c.user_id IS NULL
+                        AND NOT EXISTS (SELECT 1 FROM public.budget b WHERE b.category_id = c.category_id)
+                        AND NOT EXISTS (SELECT 1 FROM public.expense e WHERE e.category_id = c.category_id);
+                    END $$;
+                    """);
+            jdbc.execute("CREATE INDEX IF NOT EXISTS idx_categories_user ON public.categories (user_id)");
+            jdbc.execute("ALTER TABLE public.categories DROP CONSTRAINT IF EXISTS categories_user_id_fkey");
+            jdbc.execute("ALTER TABLE public.categories ADD CONSTRAINT categories_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON DELETE CASCADE");
+        } catch (Exception e) {
+            log.warn("[FkMigration] Could not migrate category ownership: {}", e.getMessage());
+        }
+    }
+
+    /** Makes the privacy boundary part of the schema, not only an API convention. */
+    private void enforcePersonalOwnership(String table) {
+        try {
+            jdbc.execute("CREATE INDEX IF NOT EXISTS idx_" + table + "_trip_owner ON public." + table + " (trip_id, created_by_user_id)");
+            jdbc.execute("ALTER TABLE public." + table + " ALTER COLUMN created_by_user_id SET NOT NULL");
+            jdbc.execute("ALTER TABLE public." + table + " DROP CONSTRAINT IF EXISTS " + table + "_created_by_user_id_fkey");
+            jdbc.execute("ALTER TABLE public." + table + " ADD CONSTRAINT " + table + "_created_by_user_id_fkey " +
+                    "FOREIGN KEY (created_by_user_id) REFERENCES public.users(user_id) ON DELETE CASCADE");
+        } catch (Exception e) {
+            log.warn("[FkMigration] Could not enforce personal ownership for {}: {}", table, e.getMessage());
+        }
+    }
+
+    private void enforceBudgetUser() {
+        try {
+            jdbc.execute("CREATE INDEX IF NOT EXISTS idx_budget_trip_user ON public.budget (trip_id, user_id)");
+            jdbc.execute("ALTER TABLE public.budget ALTER COLUMN user_id SET NOT NULL");
+            jdbc.execute("ALTER TABLE public.budget DROP CONSTRAINT IF EXISTS budget_user_id_fkey");
+            jdbc.execute("ALTER TABLE public.budget ADD CONSTRAINT budget_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON DELETE CASCADE");
+        } catch (Exception e) {
+            log.warn("[FkMigration] Could not enforce budget user ownership: {}", e.getMessage());
+        }
+    }
+
+    private void enforceExpenseUser() {
+        try {
+            jdbc.execute("CREATE INDEX IF NOT EXISTS idx_expense_trip_user ON public.expense (trip_id, user_id)");
+            jdbc.execute("ALTER TABLE public.expense ALTER COLUMN user_id SET NOT NULL");
+            jdbc.execute("ALTER TABLE public.expense DROP CONSTRAINT IF EXISTS expense_user_id_fkey");
+            jdbc.execute("ALTER TABLE public.expense ADD CONSTRAINT expense_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON DELETE CASCADE");
+        } catch (Exception e) {
+            log.warn("[FkMigration] Could not enforce expense user ownership: {}", e.getMessage());
+        }
     }
 
     /**

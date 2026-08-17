@@ -7,6 +7,7 @@ import com.travel.api.repository.NotificationRepository;
 import com.travel.api.repository.TripRepository;
 import com.travel.api.security.UserPrincipal;
 import com.travel.api.service.UserService;
+import com.travel.api.service.TripAccessService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,17 +24,16 @@ public class NotificationController {
     private final TripRepository tripRepository;
     private final NotificationRepository notificationRepository;
     private final UserService userService;
+    private final TripAccessService tripAccessService;
 
     private Trip resolveTrip(UserPrincipal principal, Long tripId) {
-        var user = userService.ensureUser(principal.getSupabaseUserId());
-        return tripRepository.findByTripIdAndUserAndDeletedAtIsNull(tripId, user)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        return tripAccessService.accessible(principal, tripId);
     }
 
     @GetMapping
     public List<Notification> getAll(@AuthenticationPrincipal UserPrincipal principal,
                                       @PathVariable Long tripId) {
-        return notificationRepository.findByTripOrderByNotificationDatetimeAsc(resolveTrip(principal, tripId));
+        return notificationRepository.findByTripAndCreatedByOrderByNotificationDatetimeAsc(resolveTrip(principal, tripId), tripAccessService.currentUser(principal));
     }
 
     @PostMapping
@@ -43,6 +43,7 @@ public class NotificationController {
                                 @RequestBody NotificationRequest req) {
         return notificationRepository.save(Notification.builder()
                 .trip(resolveTrip(principal, tripId))
+                .createdBy(tripAccessService.currentUser(principal))
                 .reminder(req.getReminder())
                 .notificationDatetime(req.getNotificationDatetime())
                 .notificationType(req.getNotificationType())
@@ -54,7 +55,7 @@ public class NotificationController {
                                 @PathVariable Long tripId,
                                 @PathVariable Long id,
                                 @RequestBody NotificationRequest req) {
-        Notification n = notificationRepository.findByNotificationIdAndTrip(id, resolveTrip(principal, tripId))
+        Notification n = notificationRepository.findByNotificationIdAndTripAndCreatedBy(id, resolveTrip(principal, tripId), tripAccessService.currentUser(principal))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (req.getReminder() != null) n.setReminder(req.getReminder());
         if (req.getNotificationDatetime() != null) n.setNotificationDatetime(req.getNotificationDatetime());
@@ -67,7 +68,7 @@ public class NotificationController {
     public void delete(@AuthenticationPrincipal UserPrincipal principal,
                        @PathVariable Long tripId,
                        @PathVariable Long id) {
-        Notification n = notificationRepository.findByNotificationIdAndTrip(id, resolveTrip(principal, tripId))
+        Notification n = notificationRepository.findByNotificationIdAndTripAndCreatedBy(id, resolveTrip(principal, tripId), tripAccessService.currentUser(principal))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         notificationRepository.delete(n);
     }

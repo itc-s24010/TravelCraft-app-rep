@@ -83,6 +83,9 @@ async function request<T>(
   try {
     res = await fetch(`/spring${path}`, {
       ...options,
+      // These responses are user-scoped. Never reuse another session's
+      // browser/Next cache entry for the same trip URL.
+      cache: "no-store",
       headers,
       signal: controller.signal,
     });
@@ -104,6 +107,11 @@ async function request<T>(
 // ─── API ───────────────────────────────────────────────────────────────────
 
 export const api = {
+  users: {
+    me: () => request<UserProfile>("/users/me"),
+    update: (data: Pick<UserProfile, "userName">) =>
+      request<UserProfile>("/users/me", { method: "PATCH", body: JSON.stringify(data) }),
+  },
   categories: {
     list: () => request<Category[]>("/categories"),
   },
@@ -117,6 +125,12 @@ export const api = {
     delete: (id: number) =>
       request<void>(`/trips/${id}`, { method: "DELETE" }),
     summary: (id: number) => request<Summary>(`/trips/${id}/summary`),
+    createShareLink: (id: number) =>
+      request<ShareLink>(`/trips/${id}/share-link`, { method: "POST" }),
+    revokeShareLink: (id: number) =>
+      request<void>(`/trips/${id}/share-link`, { method: "DELETE" }),
+    joinShared: (token: string) =>
+      request<Trip>(`/shared-trips/${token}/join`, { method: "POST" }),
   },
   transportation: {
     list: (tripId: number) =>
@@ -204,11 +218,15 @@ export const api = {
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 export interface Category { categoryId: number; categoryName: string }
+export interface UserProfile { userId: number; userName?: string; email?: string }
 export interface Trip {
   tripId: number; userId: number; title: string;
   tripDate?: string; memo?: string; companions?: number;
+  companionNames?: string[];
+  isCompleted?: boolean;
   createdAt?: string; updatedAt?: string;
 }
+export interface ShareLink { token: string }
 export interface Transportation {
   transportationId: number; tripId: number;
   transportationType?: string; departurePlace?: string; arrivalPlace?: string;
