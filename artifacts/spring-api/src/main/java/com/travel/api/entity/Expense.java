@@ -38,4 +38,7 @@ public class Expense {
 
     @Column(name = "payment_method")
     private String paymentMethod;
+
+    @Column(name = "description")
+    private String description;
 }

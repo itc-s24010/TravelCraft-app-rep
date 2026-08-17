@@ -10,4 +10,5 @@ public class ExpenseRequest {
     private BigDecimal expenseAmount;
     private LocalDate expenseDate;
     private String paymentMethod;
+    private String description;
 }

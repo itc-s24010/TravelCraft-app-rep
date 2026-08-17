@@ -21,3 +21,17 @@ export function formatDate(dateStr?: string): string {
     day: "numeric",
   }).format(new Date(dateStr));
 }
+
+/**
+ * 開始日と終了日から「N泊N日」ラベルを返す。
+ * 同日なら「日帰り」。どちらかが未指定なら undefined を返す。
+ */
+export function calcStayLabel(startDate?: string, endDate?: string): string | undefined {
+  if (!startDate || !endDate) return undefined;
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const nights = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  if (nights < 0) return undefined;
+  if (nights === 0) return "日帰り";
+  return `${nights}泊${nights + 1}日`;
+}

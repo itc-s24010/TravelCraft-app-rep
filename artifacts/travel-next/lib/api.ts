@@ -221,7 +221,8 @@ export interface Category { categoryId: number; categoryName: string }
 export interface UserProfile { userId: number; userName?: string; email?: string }
 export interface Trip {
   tripId: number; userId: number; title: string;
-  tripDate?: string; memo?: string; companions?: number;
+  tripDate?: string; startDate?: string; endDate?: string;
+  memo?: string; companions?: number;
   companionNames?: string[];
   isCompleted?: boolean;
   createdAt?: string; updatedAt?: string;
@@ -244,6 +245,7 @@ export interface Budget {
 export interface Expense {
   expenseId: number; tripId: number; categoryId: number;
   expenseAmount: number; expenseDate?: string; paymentMethod?: string;
+  description?: string;
   category?: Category;
 }
 export interface Notification {

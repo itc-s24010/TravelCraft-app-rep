@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { api, type Trip, type Summary, type Category } from "@/lib/api";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate, calcStayLabel } from "@/lib/utils";
 import { toast } from "sonner";
 import { BudgetTab } from "@/components/trip/BudgetTab";
 import { ExpenseTab } from "@/components/trip/ExpenseTab";
@@ -37,7 +37,7 @@ export default function TripDetailPage() {
 
   // Trip edit state
   const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState({ title: "", tripDate: "", companions: "", memo: "" });
+  const [editForm, setEditForm] = useState({ title: "", startDate: "", endDate: "", companions: "", memo: "" });
   const [saving, setSaving] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
@@ -73,7 +73,8 @@ export default function TripDetailPage() {
     if (!trip) return;
     setEditForm({
       title: trip.title ?? "",
-      tripDate: trip.tripDate ?? "",
+      startDate: trip.startDate ?? trip.tripDate ?? "",
+      endDate: trip.endDate ?? trip.startDate ?? trip.tripDate ?? "",
       companions: trip.companions != null ? String(trip.companions) : "",
       memo: trip.memo ?? "",
     });
@@ -82,11 +83,17 @@ export default function TripDetailPage() {
 
   async function handleUpdate(e: React.FormEvent) {
     e.preventDefault();
+    if (editForm.endDate && editForm.startDate && editForm.endDate < editForm.startDate) {
+      toast.error("終了日は開始日以降に設定してください");
+      return;
+    }
     setSaving(true);
     try {
       const updated = await api.trips.update(id, {
         title: editForm.title || undefined,
-        tripDate: editForm.tripDate || undefined,
+        startDate: editForm.startDate || undefined,
+        endDate: editForm.endDate || undefined,
+        tripDate: editForm.startDate || undefined,
         companions: editForm.companions !== "" ? Number(editForm.companions) : undefined,
         memo: editForm.memo || undefined,
       });
@@ -141,6 +148,9 @@ export default function TripDetailPage() {
 
   if (!trip) return <div className="text-center py-20">旅行が見つかりません</div>;
 
+  const stayLabel = calcStayLabel(trip.startDate ?? trip.tripDate, trip.endDate ?? trip.startDate ?? trip.tripDate);
+  const hasDateRange = trip.startDate && trip.endDate && trip.startDate !== trip.endDate;
+
   return (
     <div>
       {/* Breadcrumb */}
@@ -153,11 +163,16 @@ export default function TripDetailPage() {
       {/* Trip Header */}
       <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-2xl p-6 mb-6 border border-border">
         <div className="flex items-start justify-between mb-2 gap-3 flex-wrap">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-2xl font-bold">{trip.title}</h1>
             {trip.isCompleted && (
               <span className="px-2.5 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200 rounded-full">
                 ✓ 完了
+              </span>
+            )}
+            {stayLabel && (
+              <span className="px-2.5 py-0.5 text-xs font-semibold bg-primary/10 text-primary rounded-full">
+                {stayLabel}
               </span>
             )}
           </div>
@@ -181,7 +196,11 @@ export default function TripDetailPage() {
           </div>
         </div>
         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-          {trip.tripDate && <span>📅 {formatDate(trip.tripDate)}</span>}
+          {hasDateRange ? (
+            <span>📅 {formatDate(trip.startDate)} 〜 {formatDate(trip.endDate)}</span>
+          ) : (trip.startDate || trip.tripDate) ? (
+            <span>📅 {formatDate(trip.startDate ?? trip.tripDate)}</span>
+          ) : null}
           {trip.companionNames?.length ? (
             <span>👥 {trip.companionNames.join("・")}</span>
           ) : trip.companions != null ? <span>👥 {trip.companions}名</span> : null}
@@ -247,15 +266,32 @@ export default function TripDetailPage() {
                   placeholder="例：京都旅行"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">日付</label>
-                <input
-                  type="date"
-                  value={editForm.tripDate}
-                  onChange={(e) => setEditForm({ ...editForm, tripDate: e.target.value })}
-                  className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium mb-1">開始日</label>
+                  <input
+                    type="date"
+                    value={editForm.startDate}
+                    onChange={(e) => setEditForm({ ...editForm, startDate: e.target.value })}
+                    className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">終了日</label>
+                  <input
+                    type="date"
+                    value={editForm.endDate}
+                    min={editForm.startDate || undefined}
+                    onChange={(e) => setEditForm({ ...editForm, endDate: e.target.value })}
+                    className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                </div>
               </div>
+              {editForm.startDate && editForm.endDate && (
+                <p className="text-xs text-primary font-medium -mt-1">
+                  📅 {calcStayLabel(editForm.startDate, editForm.endDate)}
+                </p>
+              )}
               <div>
                 <label className="block text-sm font-medium mb-1">同行者数</label>
                 <input
@@ -319,12 +355,29 @@ export default function TripDetailPage() {
                 <dt className="text-muted-foreground">旅行名</dt>
                 <dd className="font-medium">{trip.title}</dd>
               </div>
-              {trip.tripDate && (
+              {hasDateRange ? (
+                <>
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">開始日</dt>
+                    <dd>{formatDate(trip.startDate)}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">終了日</dt>
+                    <dd>{formatDate(trip.endDate)}</dd>
+                  </div>
+                  {stayLabel && (
+                    <div className="flex justify-between">
+                      <dt className="text-muted-foreground">日程</dt>
+                      <dd className="font-semibold text-primary">{stayLabel}</dd>
+                    </div>
+                  )}
+                </>
+              ) : (trip.startDate || trip.tripDate) ? (
                 <div className="flex justify-between">
                   <dt className="text-muted-foreground">日付</dt>
-                  <dd>{formatDate(trip.tripDate)}</dd>
+                  <dd>{formatDate(trip.startDate ?? trip.tripDate)}</dd>
                 </div>
-              )}
+              ) : null}
               {trip.companionNames?.length ? (
                 <div className="flex justify-between gap-4">
                   <dt className="text-muted-foreground">同行者</dt>

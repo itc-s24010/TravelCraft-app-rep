@@ -68,6 +68,7 @@ public class ExpenseController {
                         .expenseAmount(req.getExpenseAmount())
                         .expenseDate(req.getExpenseDate())
                         .paymentMethod(req.getPaymentMethod())
+                        .description(req.getDescription())
                         .build()
         );
     }
@@ -105,8 +106,10 @@ public class ExpenseController {
                     req.getCategoryId(),
                     tripAccessService.currentUser(principal)
             );
-
             e.setCategory(cat);
+        }
+        if (req.getDescription() != null) {
+            e.setDescription(req.getDescription());
         }
 
         return expenseRepository.save(e);
