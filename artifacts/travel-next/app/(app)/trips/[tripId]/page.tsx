@@ -18,8 +18,8 @@ import { PlaneLoader } from "@/components/ui/PlaneLoader";
 const ALL_TABS = [
   { id: "overview", label: "概要" },
   { id: "schedule", label: "スケジュール" },
-  { id: "budget", label: "予算", ownerOnly: true },
-  { id: "expenses", label: "支出", ownerOnly: true },
+  { id: "budget", label: "予算" },
+  { id: "expenses", label: "支出" },
   { id: "transportation", label: "交通" },
   { id: "accommodation", label: "宿泊" },
   { id: "notifications", label: "通知" },
@@ -151,8 +151,7 @@ export default function TripDetailPage() {
 
   const stayLabel = calcStayLabel(trip.startDate ?? trip.tripDate, trip.endDate ?? trip.startDate ?? trip.tripDate);
   const hasDateRange = trip.startDate && trip.endDate && trip.startDate !== trip.endDate;
-  // 共有メンバー（オーナー以外）には予算・支出タブを非表示
-  const visibleTabs = ALL_TABS.filter(t => !t.ownerOnly || trip.isOwner !== false);
+  const visibleTabs = ALL_TABS;
 
   return (
     <div>
@@ -400,7 +399,7 @@ export default function TripDetailPage() {
               )}
             </dl>
           </div>
-          {summary && trip.isOwner !== false && (
+          {summary && (
             <div className="bg-white rounded-xl border border-border p-4">
               <h3 className="font-semibold mb-3 text-secondary">カテゴリ別支出</h3>
               <BudgetPieChart breakdown={summary.categoryBreakdown} />

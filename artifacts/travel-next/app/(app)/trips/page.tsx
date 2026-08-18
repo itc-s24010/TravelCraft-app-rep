@@ -15,6 +15,7 @@ export default function TripsPage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: "", startDate: "", endDate: "", memo: "", companions: "" });
   const [saving, setSaving] = useState(false);
+  const [filter, setFilter] = useState<"upcoming" | "completed">("upcoming");
 
   useEffect(() => {
     if (!sessionStorage.getItem("__firebase_token")) {
@@ -107,18 +108,56 @@ export default function TripsPage() {
     return <PlaneLoader text="旅行計画を読み込んでいます..." />;
   }
 
+  const upcomingTrips = trips.filter((t) => !t.isCompleted);
+  const completedTrips = trips.filter((t) => t.isCompleted);
+  const displayedTrips = filter === "upcoming" ? upcomingTrips : completedTrips;
+
   return (
     <div>
       {/* 直近の旅行 */}
       <UpcomingTripCard trips={trips} />
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold">旅行一覧</h1>
         <button
           onClick={() => setShowForm(true)}
           className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium"
         >
           ＋ 新しい旅行
+        </button>
+      </div>
+
+      {/* フィルタータブ */}
+      <div className="flex gap-1 mb-6 bg-muted/50 rounded-xl p-1 w-fit">
+        <button
+          onClick={() => setFilter("upcoming")}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            filter === "upcoming"
+              ? "bg-white shadow-sm text-foreground"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          これから
+          {upcomingTrips.length > 0 && (
+            <span className="ml-1.5 text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">
+              {upcomingTrips.length}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setFilter("completed")}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            filter === "completed"
+              ? "bg-white shadow-sm text-foreground"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          完了済み
+          {completedTrips.length > 0 && (
+            <span className="ml-1.5 text-xs bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full">
+              {completedTrips.length}
+            </span>
+          )}
         </button>
       </div>
 
@@ -181,15 +220,19 @@ export default function TripsPage() {
       )}
 
       {/* Trip Cards */}
-      {trips.length === 0 ? (
+      {displayedTrips.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground">
-          <div className="text-6xl mb-4">🗺️</div>
-          <p className="text-lg">旅行がまだありません</p>
-          <p className="text-sm mt-1">「新しい旅行」から作成してください</p>
+          <div className="text-6xl mb-4">{filter === "completed" ? "✅" : "🗺️"}</div>
+          <p className="text-lg">
+            {filter === "completed" ? "完了済みの旅行はありません" : "予定中の旅行はありません"}
+          </p>
+          {filter === "upcoming" && (
+            <p className="text-sm mt-1">「新しい旅行」から作成してください</p>
+          )}
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {trips.map((trip) => {
+          {displayedTrips.map((trip) => {
             const stayLabel = calcStayLabel(trip.startDate ?? trip.tripDate, trip.endDate ?? trip.tripDate);
             return (
               <div key={trip.tripId}
