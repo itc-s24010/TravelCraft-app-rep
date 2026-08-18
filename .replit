@@ -51,3 +51,7 @@ channel = "stable-25_05"
 
 [userenv.shared]
 SPRING_API_PORT = "8099"
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 120000
