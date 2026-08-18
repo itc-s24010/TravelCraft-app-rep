@@ -205,10 +205,38 @@ export default function TripDetailPage() {
           ) : (trip.startDate || trip.tripDate) ? (
             <span>📅 {formatDate(trip.startDate ?? trip.tripDate)}</span>
           ) : null}
-          {trip.companionNames?.length ? (
-            <span>👥 {trip.companionNames.join("・")}</span>
-          ) : trip.companions != null ? <span>👥 {trip.companions}名</span> : null}
+          {!trip.companionNames?.length && trip.companions != null && (
+            <span>👥 {trip.companions}名</span>
+          )}
         </div>
+
+        {/* メンバー表示 */}
+        {trip.companionNames && trip.companionNames.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-3">
+            {trip.companionNames.map((name, i) => {
+              const CHIP_COLORS = [
+                "bg-primary/10 text-primary",
+                "bg-emerald-100 text-emerald-700",
+                "bg-violet-100 text-violet-700",
+                "bg-amber-100 text-amber-700",
+                "bg-rose-100 text-rose-700",
+                "bg-cyan-100 text-cyan-700",
+              ];
+              const color = CHIP_COLORS[i % CHIP_COLORS.length];
+              const initial = name.trim().charAt(0).toUpperCase();
+              return (
+                <span key={i} className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${color}`}>
+                  <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold bg-current/20`}
+                    style={{ fontSize: "10px", lineHeight: 1 }}>
+                    {initial}
+                  </span>
+                  {name}
+                </span>
+              );
+            })}
+          </div>
+        )}
+
         {trip.memo && <p className="mt-3 text-sm text-muted-foreground">{trip.memo}</p>}
 
         {summary && (
