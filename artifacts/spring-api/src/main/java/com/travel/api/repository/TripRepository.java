@@ -22,5 +22,9 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
     @EntityGraph(attributePaths = {"user", "members"})
     Optional<Trip> findAccessibleByTripIdAndUser(@Param("tripId") Long tripId, @Param("user") User user);
 
+    /** Load trip with all members (no user filter) – used to check access after full member list is loaded. */
+    @EntityGraph(attributePaths = {"user", "members"})
+    Optional<Trip> findByTripIdAndDeletedAtIsNull(Long tripId);
+
     Optional<Trip> findByShareTokenAndDeletedAtIsNull(String shareToken);
 }

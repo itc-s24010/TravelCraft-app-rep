@@ -26,8 +26,11 @@ public class UserService {
 
     private User updateProfile(User user, UserPrincipal principal) {
         boolean changed = false;
-        if (principal.getUserName() != null && !principal.getUserName().isBlank()
-                && !principal.getUserName().equals(user.getUserName())) {
+        // Only seed userName from Firebase token when the DB has no name yet.
+        // Once a user explicitly sets their name via PATCH /users/me it must not
+        // be overwritten by a potentially stale Firebase displayName in the token.
+        if ((user.getUserName() == null || user.getUserName().isBlank())
+                && principal.getUserName() != null && !principal.getUserName().isBlank()) {
             user.setUserName(principal.getUserName());
             changed = true;
         }
