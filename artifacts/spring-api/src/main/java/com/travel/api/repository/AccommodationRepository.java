@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface AccommodationRepository extends JpaRepository<Accommodation, Long> {
+    /** 共有メンバーを含むトリップ全体の宿泊情報を返す（GETリスト用） */
+    List<Accommodation> findByTripOrderByCheckInAsc(Trip trip);
     List<Accommodation> findByTripAndCreatedByOrderByCheckInAsc(Trip trip, User user);
     Optional<Accommodation> findByAccommodationIdAndTripAndCreatedBy(Long id, Trip trip, User user);
 }

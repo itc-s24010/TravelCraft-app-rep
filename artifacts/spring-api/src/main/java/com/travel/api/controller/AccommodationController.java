@@ -33,7 +33,7 @@ public class AccommodationController {
     @GetMapping
     public List<Accommodation> getAll(@AuthenticationPrincipal UserPrincipal principal,
                                        @PathVariable Long tripId) {
-        return accommodationRepository.findByTripAndCreatedByOrderByCheckInAsc(resolveTrip(principal, tripId), tripAccessService.currentUser(principal));
+        return accommodationRepository.findByTripOrderByCheckInAsc(resolveTrip(principal, tripId));
     }
 
     @PostMapping

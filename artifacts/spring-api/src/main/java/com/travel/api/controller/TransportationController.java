@@ -33,7 +33,7 @@ public class TransportationController {
     @GetMapping
     public List<Transportation> getAll(@AuthenticationPrincipal UserPrincipal principal,
                                         @PathVariable Long tripId) {
-        return transportationRepository.findByTripAndCreatedByOrderByDepartureTimeAsc(resolveTrip(principal, tripId), tripAccessService.currentUser(principal));
+        return transportationRepository.findByTripOrderByDepartureTimeAsc(resolveTrip(principal, tripId));
     }
 
     @PostMapping
