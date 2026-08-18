@@ -5,6 +5,7 @@ import { api, type Transportation } from "@/lib/api";
 import { toast } from "sonner";
 import { PlaneLoader } from "@/components/ui/PlaneLoader";
 import { formatCurrency } from "@/lib/utils";
+import { DateTimePicker } from "@/components/ui/DateTimePicker";
 
 interface Props { tripId: number; }
 
@@ -124,16 +125,10 @@ export function TransportationTab({ tripId }: Props) {
             className={inputCls} placeholder="出発地" />
           <input value={form.arrivalPlace} onChange={(e) => setForm({ ...form, arrivalPlace: e.target.value })}
             className={inputCls} placeholder="到着地" />
-          <div>
-            <label className="block text-xs text-muted-foreground mb-1">出発日時</label>
-            <input type="datetime-local" value={form.departureTime}
-              onChange={(e) => setForm({ ...form, departureTime: e.target.value })} className={`w-full ${inputCls}`} />
-          </div>
-          <div>
-            <label className="block text-xs text-muted-foreground mb-1">到着日時</label>
-            <input type="datetime-local" value={form.arrivalTime}
-              onChange={(e) => setForm({ ...form, arrivalTime: e.target.value })} className={`w-full ${inputCls}`} />
-          </div>
+          <DateTimePicker label="出発日時" value={form.departureTime}
+            onChange={(v) => setForm({ ...form, departureTime: v })} />
+          <DateTimePicker label="到着日時" value={form.arrivalTime}
+            onChange={(v) => setForm({ ...form, arrivalTime: v })} />
           <div className="col-span-2 flex gap-2 justify-end">
             <button type="button" onClick={() => setShowForm(false)}
               className="px-3 py-1.5 border border-border rounded-lg text-sm hover:bg-muted">キャンセル</button>
@@ -168,18 +163,10 @@ export function TransportationTab({ tripId }: Props) {
                   <input value={editForm.arrivalPlace}
                     onChange={(e) => setEditForm({ ...editForm, arrivalPlace: e.target.value })}
                     className={inputCls} placeholder="到着地" />
-                  <div>
-                    <label className="block text-xs text-muted-foreground mb-1">出発日時</label>
-                    <input type="datetime-local" value={editForm.departureTime}
-                      onChange={(e) => setEditForm({ ...editForm, departureTime: e.target.value })}
-                      className={`w-full ${inputCls}`} />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-muted-foreground mb-1">到着日時</label>
-                    <input type="datetime-local" value={editForm.arrivalTime}
-                      onChange={(e) => setEditForm({ ...editForm, arrivalTime: e.target.value })}
-                      className={`w-full ${inputCls}`} />
-                  </div>
+                  <DateTimePicker label="出発日時" value={editForm.departureTime}
+                    onChange={(v) => setEditForm({ ...editForm, departureTime: v })} />
+                  <DateTimePicker label="到着日時" value={editForm.arrivalTime}
+                    onChange={(v) => setEditForm({ ...editForm, arrivalTime: v })} />
                   <div className="col-span-2 flex gap-2 justify-end">
                     <button type="button" onClick={() => setEditId(null)}
                       className="px-3 py-1.5 border border-border rounded-lg text-sm hover:bg-muted">キャンセル</button>

@@ -5,6 +5,7 @@ import { api, type ScheduleItem } from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
 import { PlaneLoader } from "@/components/ui/PlaneLoader";
+import { DateTimePicker } from "@/components/ui/DateTimePicker";
 
 interface Props { tripId: number; }
 
@@ -163,18 +164,10 @@ export function ScheduleTab({ tripId }: Props) {
               onChange={(e) => setForm({ ...form, location: e.target.value })}
               className={inputCls} placeholder="場所" />
             <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="block text-xs text-muted-foreground mb-1">開始日時</label>
-                <input type="datetime-local" value={form.startTime}
-                  onChange={(e) => setForm({ ...form, startTime: e.target.value })}
-                  className={inputCls} />
-              </div>
-              <div>
-                <label className="block text-xs text-muted-foreground mb-1">終了日時</label>
-                <input type="datetime-local" value={form.endTime}
-                  onChange={(e) => setForm({ ...form, endTime: e.target.value })}
-                  className={inputCls} />
-              </div>
+              <DateTimePicker label="開始日時" value={form.startTime}
+                onChange={(v) => setForm({ ...form, startTime: v })} />
+              <DateTimePicker label="終了日時" value={form.endTime}
+                onChange={(v) => setForm({ ...form, endTime: v })} />
             </div>
             <input
               type="number" min="0" value={form.cost}
@@ -241,18 +234,10 @@ export function ScheduleTab({ tripId }: Props) {
                                 onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
                                 className={inputCls} placeholder="場所" />
                               <div className="grid grid-cols-2 gap-2">
-                                <div>
-                                  <label className="block text-xs text-muted-foreground mb-1">開始日時</label>
-                                  <input type="datetime-local" value={editForm.startTime}
-                                    onChange={(e) => setEditForm({ ...editForm, startTime: e.target.value })}
-                                    className={inputCls} />
-                                </div>
-                                <div>
-                                  <label className="block text-xs text-muted-foreground mb-1">終了日時</label>
-                                  <input type="datetime-local" value={editForm.endTime}
-                                    onChange={(e) => setEditForm({ ...editForm, endTime: e.target.value })}
-                                    className={inputCls} />
-                                </div>
+                                <DateTimePicker label="開始日時" value={editForm.startTime}
+                                  onChange={(v) => setEditForm({ ...editForm, startTime: v })} />
+                                <DateTimePicker label="終了日時" value={editForm.endTime}
+                                  onChange={(v) => setEditForm({ ...editForm, endTime: v })} />
                               </div>
                               <input type="number" min="0" value={editForm.cost}
                                 onChange={(e) => setEditForm({ ...editForm, cost: e.target.value })}

@@ -187,10 +187,12 @@ export default function TripDetailPage() {
               }`}>
               {trip.isCompleted ? "未完了に戻す" : "✓ 完了にする"}
             </button>
-            <button onClick={openShare}
-              className="text-xs px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
-              ↗ 共有
-            </button>
+            {trip.isOwner !== false && (
+              <button onClick={openShare}
+                className="text-xs px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                ↗ 共有
+              </button>
+            )}
             <button onClick={startEdit}
               className="text-xs px-3 py-1.5 border border-border rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/60 transition-colors">
               ✏️ 編集

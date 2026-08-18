@@ -5,6 +5,7 @@ import { api, type Accommodation } from "@/lib/api";
 import { formatDate } from "@/lib/utils";
 import { toast } from "sonner";
 import { PlaneLoader } from "@/components/ui/PlaneLoader";
+import { DatePicker } from "@/components/ui/DateTimePicker";
 
 interface Props { tripId: number; }
 
@@ -113,16 +114,10 @@ export function AccommodationTab({ tripId }: Props) {
           <input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })}
             className={inputCls} placeholder="住所" />
           <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="block text-xs text-muted-foreground mb-1">チェックイン</label>
-              <input type="date" value={form.checkIn} onChange={(e) => setForm({ ...form, checkIn: e.target.value })}
-                className={inputCls} />
-            </div>
-            <div>
-              <label className="block text-xs text-muted-foreground mb-1">チェックアウト</label>
-              <input type="date" value={form.checkOut} onChange={(e) => setForm({ ...form, checkOut: e.target.value })}
-                className={inputCls} />
-            </div>
+            <DatePicker label="チェックイン" value={form.checkIn}
+              onChange={(v) => setForm({ ...form, checkIn: v })} />
+            <DatePicker label="チェックアウト" value={form.checkOut}
+              onChange={(v) => setForm({ ...form, checkOut: v })} />
           </div>
           <input value={form.reservationNumber}
             onChange={(e) => setForm({ ...form, reservationNumber: e.target.value })}
@@ -154,18 +149,10 @@ export function AccommodationTab({ tripId }: Props) {
                     onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
                     className={inputCls} placeholder="住所" />
                   <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-xs text-muted-foreground mb-1">チェックイン</label>
-                      <input type="date" value={editForm.checkIn}
-                        onChange={(e) => setEditForm({ ...editForm, checkIn: e.target.value })}
-                        className={inputCls} />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-muted-foreground mb-1">チェックアウト</label>
-                      <input type="date" value={editForm.checkOut}
-                        onChange={(e) => setEditForm({ ...editForm, checkOut: e.target.value })}
-                        className={inputCls} />
-                    </div>
+                    <DatePicker label="チェックイン" value={editForm.checkIn}
+                      onChange={(v) => setEditForm({ ...editForm, checkIn: v })} />
+                    <DatePicker label="チェックアウト" value={editForm.checkOut}
+                      onChange={(v) => setEditForm({ ...editForm, checkOut: v })} />
                   </div>
                   <input value={editForm.reservationNumber}
                     onChange={(e) => setEditForm({ ...editForm, reservationNumber: e.target.value })}
