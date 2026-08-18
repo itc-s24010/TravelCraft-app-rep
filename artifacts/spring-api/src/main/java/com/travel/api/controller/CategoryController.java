@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/categories")
@@ -20,5 +21,12 @@ public class CategoryController {
     @GetMapping
     public List<Category> getAll(@AuthenticationPrincipal UserPrincipal principal) {
         return categoryService.listForUser(userService.ensureUser(principal));
+    }
+
+    @PatchMapping("/{id}")
+    public Category updateColor(@AuthenticationPrincipal UserPrincipal principal,
+                                @PathVariable Long id,
+                                @RequestBody Map<String, String> body) {
+        return categoryService.updateColor(id, body.get("color"), userService.ensureUser(principal));
     }
 }

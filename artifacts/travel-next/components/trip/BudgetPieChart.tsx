@@ -1,16 +1,18 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import type { Category } from "@/lib/api";
 
-const COLORS = [
-  "#f97316", // orange
-  "#3b82f6", // blue
-  "#10b981", // emerald
-  "#a855f7", // purple
-  "#ef4444", // red
-  "#eab308", // yellow
-  "#06b6d4", // cyan
-  "#ec4899", // pink
+const DEFAULT_COLORS = [
+  "#f97316", "#3b82f6", "#10b981", "#a855f7",
+  "#ef4444", "#eab308", "#06b6d4", "#ec4899",
+];
+
+const PRESET_COLORS = [
+  "#f97316", "#ef4444", "#eab308", "#84cc16",
+  "#10b981", "#06b6d4", "#3b82f6", "#6366f1",
+  "#a855f7", "#ec4899", "#78716c", "#64748b",
 ];
 
 interface BudgetPieChartProps {
@@ -20,31 +22,97 @@ interface BudgetPieChartProps {
     budget: number;
     expense: number;
   }>;
+  categories?: Category[];
+  onColorChange?: (categoryId: number, color: string) => Promise<void>;
 }
 
 function fmt(v: number) {
   return `¥${v.toLocaleString()}`;
 }
 
-export function BudgetPieChart({ breakdown }: BudgetPieChartProps) {
+function resolveColor(categoryId: number, index: number, categories?: Category[]): string {
+  const cat = categories?.find((c) => c.categoryId === categoryId);
+  return cat?.color ?? DEFAULT_COLORS[index % DEFAULT_COLORS.length];
+}
+
+/* ── カラーピッカーポップオーバー ── */
+function ColorPickerPopover({
+  currentColor,
+  onSelect,
+  onClose,
+}: {
+  currentColor: string;
+  onSelect: (color: string) => void;
+  onClose: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [onClose]);
+
+  return (
+    <div
+      ref={ref}
+      className="absolute left-0 top-5 z-50 bg-white border border-border rounded-xl shadow-lg p-2.5 w-40"
+    >
+      <p className="text-[10px] text-muted-foreground mb-2 font-medium">カラーを選択</p>
+      <div className="grid grid-cols-4 gap-1.5">
+        {PRESET_COLORS.map((color) => (
+          <button
+            key={color}
+            onClick={() => { onSelect(color); onClose(); }}
+            className="w-7 h-7 rounded-full border-2 transition-transform hover:scale-110"
+            style={{
+              backgroundColor: color,
+              borderColor: color === currentColor ? "#1e293b" : "transparent",
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function BudgetPieChart({ breakdown, categories, onColorChange }: BudgetPieChartProps) {
+  const [openPickerId, setOpenPickerId] = useState<number | null>(null);
+  const [saving, setSaving] = useState<number | null>(null);
+
   const totalBudget = breakdown.reduce((s, c) => s + c.budget, 0);
   const totalExpense = breakdown.reduce((s, c) => s + c.expense, 0);
   const remaining = totalBudget - totalExpense;
 
+  // 横バー用：予算のある or 支出のある全カテゴリ
+  const barData = breakdown.filter((c) => c.budget > 0 || c.expense > 0);
+
   // 支出のある項目だけ円グラフに使う
   const pieData = breakdown
     .filter((c) => c.expense > 0)
-    .map((c, i) => ({ name: c.categoryName, value: c.expense, color: COLORS[i % COLORS.length] }));
+    .map((c, i) => ({
+      name: c.categoryName,
+      value: c.expense,
+      color: resolveColor(c.categoryId, i, categories),
+    }));
 
-  // 余り分を円グラフに追加（予算があるとき）
   if (totalBudget > 0 && remaining > 0) {
     pieData.push({ name: "残り予算", value: remaining, color: "#e5e7eb" });
   }
 
   const isEmpty = totalBudget === 0 && totalExpense === 0;
 
-  // 横バー用：予算のある or 支出のある全カテゴリ
-  const barData = breakdown.filter((c) => c.budget > 0 || c.expense > 0);
+  async function handleColorSelect(categoryId: number, color: string) {
+    if (!onColorChange) return;
+    setSaving(categoryId);
+    try {
+      await onColorChange(categoryId, color);
+    } finally {
+      setSaving(null);
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -101,20 +169,33 @@ export function BudgetPieChart({ breakdown }: BudgetPieChartProps) {
       {(barData.length > 0 || (totalBudget > 0 && remaining >= 0)) && (
         <div className="space-y-2.5">
           {barData.map((c, i) => {
-            // 各カテゴリの予算に対する支出割合（予算なし＝支出あり → 100% 扱い）
+            const color = resolveColor(c.categoryId, i, categories);
             const pct = c.budget > 0
               ? Math.min(100, (c.expense / c.budget) * 100)
               : c.expense > 0 ? 100 : 0;
             const isOver = c.budget > 0 && c.expense > c.budget;
-            const color = COLORS[i % COLORS.length];
+            const isOpen = openPickerId === c.categoryId;
+
             return (
               <div key={c.categoryId}>
                 <div className="flex justify-between text-xs mb-1">
                   <span className="flex items-center gap-1.5 font-medium">
-                    <span
-                      className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
-                      style={{ backgroundColor: color }}
-                    />
+                    {/* クリックで色変更 */}
+                    <span className="relative">
+                      <button
+                        onClick={() => onColorChange && setOpenPickerId(isOpen ? null : c.categoryId)}
+                        className={`inline-block w-3 h-3 rounded-full shrink-0 transition-transform ${onColorChange ? "hover:scale-125 cursor-pointer" : "cursor-default"} ${saving === c.categoryId ? "opacity-50" : ""}`}
+                        style={{ backgroundColor: color }}
+                        title={onColorChange ? "色を変更" : undefined}
+                      />
+                      {isOpen && (
+                        <ColorPickerPopover
+                          currentColor={color}
+                          onSelect={(newColor) => handleColorSelect(c.categoryId, newColor)}
+                          onClose={() => setOpenPickerId(null)}
+                        />
+                      )}
+                    </span>
                     {c.categoryName}
                   </span>
                   <span className={`tabular-nums ${isOver ? "text-red-500 font-semibold" : "text-muted-foreground"}`}>
@@ -126,10 +207,7 @@ export function BudgetPieChart({ breakdown }: BudgetPieChartProps) {
                 <div className="h-2 bg-muted rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all"
-                    style={{
-                      width: `${pct}%`,
-                      backgroundColor: isOver ? "#ef4444" : color,
-                    }}
+                    style={{ width: `${pct}%`, backgroundColor: isOver ? "#ef4444" : color }}
                   />
                 </div>
               </div>
@@ -151,9 +229,7 @@ export function BudgetPieChart({ breakdown }: BudgetPieChartProps) {
               <div className="h-2.5 bg-slate-200 rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all ${remaining < 0 ? "bg-red-400" : "bg-emerald-400"}`}
-                  style={{
-                    width: `${Math.min(100, totalBudget > 0 ? (Math.max(0, remaining) / totalBudget) * 100 : 0)}%`,
-                  }}
+                  style={{ width: `${Math.min(100, totalBudget > 0 ? (Math.max(0, remaining) / totalBudget) * 100 : 0)}%` }}
                 />
               </div>
               <div className="flex justify-between text-xs mt-2 font-medium">
@@ -163,6 +239,10 @@ export function BudgetPieChart({ breakdown }: BudgetPieChartProps) {
             </div>
           )}
         </div>
+      )}
+
+      {onColorChange && barData.length > 0 && (
+        <p className="text-[10px] text-muted-foreground text-center">● をクリックしてカテゴリの色を変更できます</p>
       )}
     </div>
   );

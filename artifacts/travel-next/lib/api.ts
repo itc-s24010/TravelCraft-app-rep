@@ -114,6 +114,8 @@ export const api = {
   },
   categories: {
     list: () => request<Category[]>("/categories"),
+    updateColor: (id: number, color: string | null) =>
+      request<Category>(`/categories/${id}`, { method: "PATCH", body: JSON.stringify({ color }) }),
   },
   trips: {
     list: () => request<Trip[]>("/trips"),
@@ -217,7 +219,7 @@ export const api = {
 };
 
 // ─── Types ─────────────────────────────────────────────────────────────────
-export interface Category { categoryId: number; categoryName: string }
+export interface Category { categoryId: number; categoryName: string; color?: string }
 export interface UserProfile { userId: number; userName?: string; email?: string }
 export interface Trip {
   tripId: number; userId: number; title: string;

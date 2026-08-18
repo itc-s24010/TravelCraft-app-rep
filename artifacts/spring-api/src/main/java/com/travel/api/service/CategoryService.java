@@ -25,6 +25,14 @@ public class CategoryService {
         return categoryRepository.findByUserOrderByCategoryIdAsc(user);
     }
 
+    @Transactional
+    public Category updateColor(Long categoryId, String color, User user) {
+        Category cat = categoryRepository.findByCategoryIdAndUser(categoryId, user)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category not found"));
+        cat.setColor(color == null || color.isBlank() ? null : color.trim());
+        return categoryRepository.save(cat);
+    }
+
     @Transactional(readOnly = true)
     public Category requireOwned(Long categoryId, User user) {
         return categoryRepository.findByCategoryIdAndUser(categoryId, user)

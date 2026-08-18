@@ -432,7 +432,16 @@ export default function TripDetailPage() {
           {summary && (
             <div className="bg-white rounded-xl border border-border p-4">
               <h3 className="font-semibold mb-3 text-secondary">カテゴリ別支出</h3>
-              <BudgetPieChart breakdown={summary.categoryBreakdown} />
+              <BudgetPieChart
+                breakdown={summary.categoryBreakdown}
+                categories={categories}
+                onColorChange={async (categoryId, color) => {
+                  const updated = await api.categories.updateColor(categoryId, color);
+                  setCategories((prev) =>
+                    prev.map((c) => (c.categoryId === updated.categoryId ? updated : c))
+                  );
+                }}
+              />
             </div>
           )}
         </div>
