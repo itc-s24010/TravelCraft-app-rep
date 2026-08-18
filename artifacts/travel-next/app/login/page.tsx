@@ -42,7 +42,7 @@ export default function LoginPage() {
 
     try {
       if (isSignUp && !userName.trim()) {
-        setError("表示名を入力してください。");
+        setError("ユーザー名を入力してください。");
         return;
       }
       const auth = getFirebaseAuth();
@@ -112,7 +112,7 @@ export default function LoginPage() {
               {isSignUp && (
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-foreground mb-1">
-                    表示名
+                    ユーザー名
                   </label>
                   <input
                     type="text"
