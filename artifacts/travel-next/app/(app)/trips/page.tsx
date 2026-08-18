@@ -15,7 +15,7 @@ export default function TripsPage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: "", startDate: "", endDate: "", memo: "", companions: "" });
   const [saving, setSaving] = useState(false);
-  const [filter, setFilter] = useState<"upcoming" | "completed">("upcoming");
+  const [filter, setFilter] = useState<"all" | "upcoming" | "completed">("all");
 
   useEffect(() => {
     if (!sessionStorage.getItem("__firebase_token")) {
@@ -108,9 +108,13 @@ export default function TripsPage() {
     return <PlaneLoader text="旅行計画を読み込んでいます..." />;
   }
 
+  const allTrips = trips;
   const upcomingTrips = trips.filter((t) => !t.isCompleted);
   const completedTrips = trips.filter((t) => t.isCompleted);
-  const displayedTrips = filter === "upcoming" ? upcomingTrips : completedTrips;
+  const displayedTrips =
+    filter === "all" ? allTrips :
+    filter === "upcoming" ? upcomingTrips :
+    completedTrips;
 
   return (
     <div>
@@ -129,36 +133,28 @@ export default function TripsPage() {
 
       {/* フィルタータブ */}
       <div className="flex gap-1 mb-6 bg-muted/50 rounded-xl p-1 w-fit">
-        <button
-          onClick={() => setFilter("upcoming")}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            filter === "upcoming"
-              ? "bg-white shadow-sm text-foreground"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          これから
-          {upcomingTrips.length > 0 && (
-            <span className="ml-1.5 text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">
-              {upcomingTrips.length}
-            </span>
-          )}
-        </button>
-        <button
-          onClick={() => setFilter("completed")}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            filter === "completed"
-              ? "bg-white shadow-sm text-foreground"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          完了済み
-          {completedTrips.length > 0 && (
-            <span className="ml-1.5 text-xs bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full">
-              {completedTrips.length}
-            </span>
-          )}
-        </button>
+        {([
+          { key: "all", label: "全て", count: allTrips.length, badgeClass: "bg-muted text-muted-foreground" },
+          { key: "upcoming", label: "未完了", count: upcomingTrips.length, badgeClass: "bg-primary/10 text-primary" },
+          { key: "completed", label: "完了済み", count: completedTrips.length, badgeClass: "bg-emerald-100 text-emerald-700" },
+        ] as const).map(({ key, label, count, badgeClass }) => (
+          <button
+            key={key}
+            onClick={() => setFilter(key)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              filter === key
+                ? "bg-white shadow-sm text-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {label}
+            {count > 0 && (
+              <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${badgeClass}`}>
+                {count}
+              </span>
+            )}
+          </button>
+        ))}
       </div>
 
       {/* Create Form Modal */}
@@ -224,9 +220,11 @@ export default function TripsPage() {
         <div className="text-center py-20 text-muted-foreground">
           <div className="text-6xl mb-4">{filter === "completed" ? "✅" : "🗺️"}</div>
           <p className="text-lg">
-            {filter === "completed" ? "完了済みの旅行はありません" : "予定中の旅行はありません"}
+            {filter === "all" ? "旅行がまだありません" :
+             filter === "completed" ? "完了済みの旅行はありません" :
+             "未完了の旅行はありません"}
           </p>
-          {filter === "upcoming" && (
+          {filter !== "completed" && (
             <p className="text-sm mt-1">「新しい旅行」から作成してください</p>
           )}
         </div>
