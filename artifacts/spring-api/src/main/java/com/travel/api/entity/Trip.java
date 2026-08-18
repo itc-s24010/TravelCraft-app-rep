@@ -80,16 +80,25 @@ public class Trip {
     @JsonProperty("companionNames")
     public java.util.List<String> getCompanionNames() {
         java.util.LinkedHashSet<String> names = new java.util.LinkedHashSet<>();
-        if (user != null && user.getUserName() != null && !user.getUserName().isBlank()) {
-            names.add(user.getUserName());
+        if (user != null) {
+            names.add(displayName(user));
         }
         if (members != null) {
             members.stream()
-                    .filter(member -> member.getUserName() != null && !member.getUserName().isBlank())
-                    .map(User::getUserName)
+                    .map(Trip::displayName)
                     .sorted()
                     .forEach(names::add);
         }
         return new java.util.ArrayList<>(names);
+    }
+
+    private static String displayName(User u) {
+        if (u.getUserName() != null && !u.getUserName().isBlank()) return u.getUserName();
+        if (u.getEmail() != null && !u.getEmail().isBlank()) {
+            String email = u.getEmail();
+            int at = email.indexOf('@');
+            return at > 0 ? email.substring(0, at) : email;
+        }
+        return "ユーザー";
     }
 }
