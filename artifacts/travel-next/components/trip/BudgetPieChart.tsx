@@ -114,31 +114,31 @@ export function BudgetPieChart({ breakdown }: BudgetPieChartProps) {
 
           {/* 残り予算 */}
           {totalBudget > 0 && (
-            <div className="pt-1 border-t border-border/50">
+            <div className="pt-2 mt-1 border-t border-border/60">
               <div className="flex justify-between text-xs mb-1">
-                <span className="flex items-center gap-1.5 font-medium text-muted-foreground">
-                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-gray-200 shrink-0" />
+                <span className="flex items-center gap-1.5 font-semibold text-foreground">
+                  <span className={`inline-block w-2.5 h-2.5 rounded-full shrink-0 ${remaining < 0 ? "bg-red-400" : "bg-emerald-400"}`} />
                   残り予算
                 </span>
                 <span
-                  className={`tabular-nums font-semibold ${
+                  className={`tabular-nums font-bold text-sm ${
                     remaining < 0 ? "text-red-500" : "text-emerald-600"
                   }`}
                 >
-                  {remaining < 0 ? "-" : ""}{fmt(Math.abs(remaining))}
+                  {remaining < 0 ? "−" : ""}{fmt(Math.abs(remaining))}
                 </span>
               </div>
-              <div className="h-2 bg-muted rounded-full overflow-hidden">
+              <div className="h-2.5 bg-slate-200 rounded-full overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-gray-200 transition-all"
+                  className={`h-full rounded-full transition-all ${remaining < 0 ? "bg-red-400" : "bg-emerald-400"}`}
                   style={{
                     width: `${Math.min(100, totalBudget > 0 ? (Math.max(0, remaining) / totalBudget) * 100 : 0)}%`,
                   }}
                 />
               </div>
-              <div className="flex justify-between text-xs mt-1 text-muted-foreground/70">
-                <span>合計支出: {fmt(totalExpense)}</span>
-                <span>予算合計: {fmt(totalBudget)}</span>
+              <div className="flex justify-between text-xs mt-2 font-medium">
+                <span className="text-slate-500">合計支出 <span className="text-foreground font-semibold">{fmt(totalExpense)}</span></span>
+                <span className="text-slate-500">予算合計 <span className="text-foreground font-semibold">{fmt(totalBudget)}</span></span>
               </div>
             </div>
           )}
