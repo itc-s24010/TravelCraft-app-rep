@@ -14,7 +14,7 @@ export default function JoinSharedTripPage() {
     async function join() {
       if (!sessionStorage.getItem("__firebase_token")) {
         sessionStorage.setItem("__pending_share_token", token);
-        window.location.href = "/login";
+        window.location.href = (process.env.NEXT_PUBLIC_BASE_PATH ?? "") + "/login";
         return;
       }
       try {

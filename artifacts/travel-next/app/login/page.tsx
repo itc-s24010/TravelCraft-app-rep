@@ -20,9 +20,10 @@ export default function LoginPage() {
       .some((cookie) => cookie.startsWith("__session=1"));
 
     if (hasToken && hasSessionCookie) {
+      const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
       const pendingToken = sessionStorage.getItem("__pending_share_token");
       sessionStorage.removeItem("__pending_share_token");
-      window.location.href = pendingToken ? `/share/${pendingToken}` : "/trips";
+      window.location.href = pendingToken ? `${base}/share/${pendingToken}` : `${base}/trips`;
     } else if (hasToken) {
       sessionStorage.removeItem("__firebase_token");
     }
@@ -66,7 +67,8 @@ export default function LoginPage() {
       // A visitor arriving via a share link resumes that invitation after login.
       const pendingToken = sessionStorage.getItem("__pending_share_token");
       sessionStorage.removeItem("__pending_share_token");
-      window.location.href = pendingToken ? `/share/${pendingToken}` : "/trips";
+      const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+      window.location.href = pendingToken ? `${base}/share/${pendingToken}` : `${base}/trips`;
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? "";
       if (code === "auth/email-already-in-use") {

@@ -6,10 +6,11 @@ import { type NextRequest, NextResponse } from "next/server";
  * correctly by the browser, and an explicit Set-Cookie to expire __session.
  */
 export function GET(_request: NextRequest) {
+  const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
   return new NextResponse(null, {
     status: 302,
     headers: {
-      Location: "/login",
+      Location: `${base}/login`,
       "Set-Cookie": "__session=; Path=/; Max-Age=0; SameSite=Lax",
     },
   });

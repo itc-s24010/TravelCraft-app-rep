@@ -19,7 +19,8 @@ export default function TripsPage() {
 
   useEffect(() => {
     if (!sessionStorage.getItem("__firebase_token")) {
-      window.location.href = "/api/logout";
+      const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+      window.location.href = `${base}/api/logout`;
       return;
     }
     loadTrips();
