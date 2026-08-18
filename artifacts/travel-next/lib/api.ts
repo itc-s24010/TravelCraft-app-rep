@@ -218,6 +218,20 @@ export const api = {
     delete: (tripId: number, id: number) =>
       request<void>(`/trips/${tripId}/schedule/${id}`, { method: "DELETE" }),
   },
+  checklist: {
+    list: (tripId: number) =>
+      request<ChecklistItem[]>(`/trips/${tripId}/checklist`),
+    create: (tripId: number, data: { label: string }) =>
+      request<ChecklistItem>(`/trips/${tripId}/checklist`, {
+        method: "POST", body: JSON.stringify(data),
+      }),
+    update: (tripId: number, id: number, data: { label?: string; isDone?: boolean }) =>
+      request<ChecklistItem>(`/trips/${tripId}/checklist/${id}`, {
+        method: "PATCH", body: JSON.stringify(data),
+      }),
+    delete: (tripId: number, id: number) =>
+      request<void>(`/trips/${tripId}/checklist/${id}`, { method: "DELETE" }),
+  },
 };
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -263,6 +277,11 @@ export interface ScheduleItem {
   scheduleId: number; tripId: number;
   title: string; description?: string; location?: string;
   startTime?: string; endTime?: string; cost?: number;
+  createdAt?: string;
+}
+export interface ChecklistItem {
+  itemId: number; tripId: number;
+  label: string; isDone: boolean;
   createdAt?: string;
 }
 export interface Summary {

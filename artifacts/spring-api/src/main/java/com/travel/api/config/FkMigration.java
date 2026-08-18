@@ -53,6 +53,7 @@ public class FkMigration implements ApplicationRunner {
         enforcePersonalOwnership("notification");
         ensureIsCompletedColumn();
         ensureTripDateColumns();
+        ensureChecklistTable();
     }
 
     private void ensureIsCompletedColumn() {
@@ -60,6 +61,23 @@ public class FkMigration implements ApplicationRunner {
             jdbc.execute("ALTER TABLE public.trips ADD COLUMN IF NOT EXISTS is_completed BOOLEAN DEFAULT FALSE;");
         } catch (Exception e) {
             log.warn("Failed to ensure is_completed column on trips table: {}", e.getMessage());
+        }
+    }
+
+    private void ensureChecklistTable() {
+        try {
+            jdbc.execute("""
+                    CREATE TABLE IF NOT EXISTS public.checklist_items (
+                        item_id   BIGSERIAL PRIMARY KEY,
+                        trip_id   BIGINT NOT NULL REFERENCES public.trips(trip_id) ON DELETE CASCADE,
+                        label     TEXT   NOT NULL,
+                        is_done   BOOLEAN NOT NULL DEFAULT FALSE,
+                        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+                    );
+                    """);
+            jdbc.execute("CREATE INDEX IF NOT EXISTS idx_checklist_trip ON public.checklist_items (trip_id, created_at)");
+        } catch (Exception e) {
+            log.warn("[FkMigration] Could not ensure checklist_items table: {}", e.getMessage());
         }
     }
 

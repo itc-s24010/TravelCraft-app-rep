@@ -13,6 +13,7 @@ import { TransportationTab } from "@/components/trip/TransportationTab";
 import { AccommodationTab } from "@/components/trip/AccommodationTab";
 import { NotificationTab } from "@/components/trip/NotificationTab";
 import { ScheduleTab } from "@/components/trip/ScheduleTab";
+import { TripChecklist } from "@/components/trip/TripChecklist";
 import { PlaneLoader } from "@/components/ui/PlaneLoader";
 
 const ALL_TABS = [
@@ -454,6 +455,8 @@ export default function TripDetailPage() {
       {/* Tab Content */}
       {activeTab === "overview" && (
         <div className="grid gap-4 sm:grid-cols-2">
+          {/* Left column: trip info + checklist */}
+          <div className="flex flex-col gap-4">
           <div className="bg-white rounded-xl border border-border p-4">
             <h3 className="font-semibold mb-2 text-secondary">旅行情報</h3>
             <dl className="space-y-2 text-sm">
@@ -503,6 +506,11 @@ export default function TripDetailPage() {
               )}
             </dl>
           </div>
+          {/* Checklist */}
+          <TripChecklist tripId={id} />
+          </div>{/* end left column */}
+
+          {/* Right column: category breakdown */}
           {summary && (
             <div className="bg-white rounded-xl border border-border p-4">
               <h3 className="font-semibold mb-3 text-secondary">カテゴリ別支出</h3>
