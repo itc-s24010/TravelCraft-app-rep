@@ -92,6 +92,18 @@ public class Trip {
         return new java.util.ArrayList<>(names);
     }
 
+    /** Member details (userId + displayName) for shared participants — excludes the owner. */
+    @JsonProperty("memberDetails")
+    public java.util.List<MemberDetail> getMemberDetails() {
+        if (members == null) return java.util.List.of();
+        return members.stream()
+                .sorted(java.util.Comparator.comparing(Trip::displayName))
+                .map(u -> new MemberDetail(u.getUserId(), displayName(u)))
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    public record MemberDetail(Long userId, String displayName) {}
+
     private static String displayName(User u) {
         if (u.getUserName() != null && !u.getUserName().isBlank()) return u.getUserName();
         if (u.getEmail() != null && !u.getEmail().isBlank()) {

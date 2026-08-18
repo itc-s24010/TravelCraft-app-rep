@@ -133,6 +133,8 @@ export const api = {
       request<void>(`/trips/${id}/share-link`, { method: "DELETE" }),
     joinShared: (token: string) =>
       request<Trip>(`/shared-trips/${token}/join`, { method: "POST" }),
+    removeMember: (tripId: number, userId: number) =>
+      request<void>(`/trips/${tripId}/members/${userId}`, { method: "DELETE" }),
   },
   transportation: {
     list: (tripId: number) =>
@@ -221,11 +223,13 @@ export const api = {
 // ─── Types ─────────────────────────────────────────────────────────────────
 export interface Category { categoryId: number; categoryName: string; color?: string }
 export interface UserProfile { userId: number; userName?: string; email?: string }
+export interface MemberDetail { userId: number; displayName: string }
 export interface Trip {
   tripId: number; userId: number; title: string;
   tripDate?: string; startDate?: string; endDate?: string;
   memo?: string; companions?: number;
   companionNames?: string[];
+  memberDetails?: MemberDetail[];
   isCompleted?: boolean;
   isOwner?: boolean;
   createdAt?: string; updatedAt?: string;

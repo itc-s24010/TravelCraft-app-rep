@@ -37,6 +37,18 @@ public class TripShareController {
         tripRepository.save(trip);
     }
 
+    @DeleteMapping("/api/trips/{tripId}/members/{userId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Transactional
+    public void removeMember(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long tripId,
+            @PathVariable Long userId) {
+        Trip trip = tripAccessService.owned(principal, tripId);
+        trip.getMembers().removeIf(m -> m.getUserId().equals(userId));
+        tripRepository.save(trip);
+    }
+
     @PostMapping("/api/shared-trips/{token}/join")
     @Transactional
     public Trip join(@AuthenticationPrincipal UserPrincipal principal, @PathVariable String token) {

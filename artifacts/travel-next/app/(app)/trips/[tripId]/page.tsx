@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { api, type Trip, type Summary, type Category } from "@/lib/api";
+import { api, type Trip, type Summary, type Category, type MemberDetail } from "@/lib/api";
 import { formatCurrency, formatDate, calcStayLabel } from "@/lib/utils";
 import { toast } from "sonner";
 import { BudgetTab } from "@/components/trip/BudgetTab";
@@ -43,6 +43,10 @@ export default function TripDetailPage() {
   const [showShare, setShowShare] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const [creatingShare, setCreatingShare] = useState(false);
+
+  // Member removal state
+  const [memberToRemove, setMemberToRemove] = useState<MemberDetail | null>(null);
+  const [removingMember, setRemovingMember] = useState(false);
 
   useEffect(() => { loadAll(); }, [id]);
 
@@ -117,6 +121,23 @@ export default function TripDetailPage() {
       toast.success(nextState ? "旅行を完了に設定しました" : "旅行を未完了に戻しました");
     } catch {
       toast.error("更新に失敗しました");
+    }
+  }
+
+  async function confirmRemoveMember() {
+    if (!memberToRemove) return;
+    setRemovingMember(true);
+    try {
+      await api.trips.removeMember(id, memberToRemove.userId);
+      // Reload the trip so companionNames, memberDetails, etc. are all consistent
+      const updated = await api.trips.get(id);
+      setTrip(updated);
+      toast.success(`${memberToRemove.displayName} を旅行から外しました`);
+    } catch {
+      toast.error("メンバーの削除に失敗しました");
+    } finally {
+      setRemovingMember(false);
+      setMemberToRemove(null);
     }
   }
 
@@ -211,31 +232,57 @@ export default function TripDetailPage() {
         </div>
 
         {/* メンバー表示 */}
-        {trip.companionNames && trip.companionNames.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-3">
-            {trip.companionNames.map((name, i) => {
-              const CHIP_COLORS = [
-                "bg-primary/10 text-primary",
-                "bg-emerald-100 text-emerald-700",
-                "bg-violet-100 text-violet-700",
-                "bg-amber-100 text-amber-700",
-                "bg-rose-100 text-rose-700",
-                "bg-cyan-100 text-cyan-700",
-              ];
-              const color = CHIP_COLORS[i % CHIP_COLORS.length];
-              const initial = name.trim().charAt(0).toUpperCase();
-              return (
-                <span key={i} className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${color}`}>
-                  <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold bg-current/20`}
+        {(() => {
+          const ownerName = trip.companionNames?.[0];
+          const hasParticipants = ownerName || (trip.memberDetails && trip.memberDetails.length > 0);
+          if (!hasParticipants) return null;
+          const CHIP_COLORS = [
+            "bg-primary/10 text-primary",
+            "bg-emerald-100 text-emerald-700",
+            "bg-violet-100 text-violet-700",
+            "bg-amber-100 text-amber-700",
+            "bg-rose-100 text-rose-700",
+            "bg-cyan-100 text-cyan-700",
+          ];
+          return (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {/* Owner chip — always index 0, no remove button */}
+              {ownerName && (
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${CHIP_COLORS[0]}`}>
+                  <span className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold bg-current/20"
                     style={{ fontSize: "10px", lineHeight: 1 }}>
-                    {initial}
+                    {ownerName.trim().charAt(0).toUpperCase()}
                   </span>
-                  {name}
+                  {ownerName}
                 </span>
-              );
-            })}
-          </div>
-        )}
+              )}
+              {/* Member chips — keyed by userId so duplicates names are handled correctly */}
+              {trip.memberDetails?.map((member, i) => {
+                const color = CHIP_COLORS[(i + 1) % CHIP_COLORS.length];
+                const initial = member.displayName.trim().charAt(0).toUpperCase();
+                return (
+                  <span key={member.userId} className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${color}`}>
+                    <span className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold bg-current/20"
+                      style={{ fontSize: "10px", lineHeight: 1 }}>
+                      {initial}
+                    </span>
+                    {member.displayName}
+                    {trip.isOwner !== false && (
+                      <button
+                        onClick={() => setMemberToRemove(member)}
+                        className="ml-0.5 leading-none opacity-60 hover:opacity-100 transition-opacity"
+                        title={`${member.displayName} を外す`}
+                        aria-label={`${member.displayName} を旅行から外す`}
+                      >
+                        ×
+                      </button>
+                    )}
+                  </span>
+                );
+              })}
+            </div>
+          );
+        })()}
 
         {trip.memo && <p className="mt-3 text-sm text-muted-foreground">{trip.memo}</p>}
 
@@ -275,6 +322,33 @@ export default function TripDetailPage() {
               </div>
             )}
             <p className="mt-3 text-xs text-muted-foreground">※ リンクを知っている人は参加できるため、信頼できる相手にだけ送ってください。</p>
+          </div>
+        </div>
+      )}
+
+      {/* Member Remove Confirmation Dialog */}
+      {memberToRemove && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-5">
+            <h2 className="font-semibold text-lg mb-2">メンバーを外す</h2>
+            <p className="text-sm text-muted-foreground mb-5">
+              <span className="font-medium text-foreground">{memberToRemove.displayName}</span> をこの旅行から外しますか？
+              再び参加するには共有リンクが必要です。
+            </p>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setMemberToRemove(null)}
+                disabled={removingMember}
+                className="px-4 py-2 border border-border rounded-lg text-sm hover:bg-muted disabled:opacity-50">
+                キャンセル
+              </button>
+              <button
+                onClick={confirmRemoveMember}
+                disabled={removingMember}
+                className="px-4 py-2 bg-destructive text-white rounded-lg text-sm hover:bg-destructive/90 disabled:opacity-50">
+                {removingMember ? "削除中..." : "外す"}
+              </button>
+            </div>
           </div>
         </div>
       )}
