@@ -69,12 +69,16 @@ export default function TripsPage() {
     }
   }
 
-  async function handleDelete(tripId: number) {
+  async function handleDelete(trip: Trip) {
+    if (trip.isOwner !== true) {
+      toast.error("旅行の作成者のみ削除できます");
+      return;
+    }
     if (!confirm("この旅行を削除しますか？")) return;
     try {
-      await api.trips.delete(tripId);
+      await api.trips.delete(trip.tripId);
       toast.success("旅行を削除しました");
-      setTrips(trips.filter((t) => t.tripId !== tripId));
+      setTrips(trips.filter((t) => t.tripId !== trip.tripId));
     } catch {
       toast.error("削除に失敗しました");
     }
@@ -253,10 +257,12 @@ export default function TripsPage() {
                         </span>
                       )}
                     </div>
-                    <button onClick={() => handleDelete(trip.tripId)}
-                      className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all text-sm shrink-0">
-                      削除
-                    </button>
+                    {trip.isOwner === true && (
+                      <button onClick={() => handleDelete(trip)}
+                        className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all text-sm shrink-0">
+                        削除
+                      </button>
+                    )}
                   </div>
                   {(trip.startDate || trip.tripDate) && (
                     <p className="text-sm text-muted-foreground mb-1">
