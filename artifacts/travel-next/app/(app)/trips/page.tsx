@@ -96,7 +96,7 @@ export default function TripsPage() {
       <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
         <p className="text-muted-foreground">セッションが切れました。ログインし直してください。</p>
         <a
-          href="/api/logout"
+          href={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/api/logout`}
           className="px-5 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium"
         >
           ログインページへ

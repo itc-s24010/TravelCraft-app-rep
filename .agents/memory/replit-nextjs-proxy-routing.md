@@ -14,6 +14,7 @@ When a Next.js artifact has `previewPath = "/travel-next"` in artifact.toml, the
 2. Set `NEXT_PUBLIC_BASE_PATH = "/travel-next"` in `artifact.toml [services.env]`
 3. Add `[[ports]]` entries to `.replit` for ALL artifact ports (if any are present, all must be listed)
 4. In middleware, use `request.nextUrl.clone()` for redirects — NOT `new URL("/login", request.url)`. The latter ignores basePath and redirects to `/login` (without prefix), causing 404.
+5. Browser `fetch()` requests must also prepend `NEXT_PUBLIC_BASE_PATH`. For example, call `${base}/spring/...`, not `/spring/...`, so the request remains under the artifact's forwarded path.
 
 ## pnpm@10.34.5 auto-install crash
 

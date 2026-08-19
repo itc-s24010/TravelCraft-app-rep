@@ -18,7 +18,8 @@ export function signOutAndRedirect(): void {
   if (typeof window === "undefined") return;
   sessionStorage.removeItem("__firebase_token");
   document.cookie = "__session=; path=/; max-age=0; SameSite=Lax";
-  window.location.href = "/login";
+  const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+  window.location.href = `${base}/login`;
 }
 
 // ─── Token helpers ─────────────────────────────────────────────────────────
@@ -81,7 +82,8 @@ async function request<T>(
 
   let res: Response;
   try {
-    res = await fetch(`/spring${path}`, {
+    const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+    res = await fetch(`${base}/spring${path}`, {
       ...options,
       // These responses are user-scoped. Never reuse another session's
       // browser/Next cache entry for the same trip URL.
