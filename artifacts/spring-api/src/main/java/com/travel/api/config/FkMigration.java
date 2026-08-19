@@ -53,6 +53,7 @@ public class FkMigration implements ApplicationRunner {
         enforcePersonalOwnership("notification");
         ensureIsCompletedColumn();
         ensureTripDateColumns();
+        ensureExpenseDateIsOptional();
         ensureChecklistTable();
     }
 
@@ -88,6 +89,14 @@ public class FkMigration implements ApplicationRunner {
             jdbc.execute("UPDATE public.trips SET start_date = trip_date WHERE start_date IS NULL AND trip_date IS NOT NULL;");
         } catch (Exception e) {
             log.warn("Failed to ensure date columns on trips table: {}", e.getMessage());
+        }
+    }
+
+    private void ensureExpenseDateIsOptional() {
+        try {
+            jdbc.execute("ALTER TABLE public.expense ALTER COLUMN expense_date DROP NOT NULL");
+        } catch (Exception e) {
+            log.warn("Failed to make expense_date optional: {}", e.getMessage());
         }
     }
 

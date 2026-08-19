@@ -139,7 +139,7 @@ export function ExpenseTab({ tripId, categories, onRefresh }: Props) {
               className={inputCls} placeholder="金額 (¥)" />
             <input type="date" value={form.expenseDate}
               onChange={(e) => setForm({ ...form, expenseDate: e.target.value })}
-              className={inputCls} />
+              className={inputCls} aria-label="日付（任意）" title="日付（任意）" />
             <input value={form.paymentMethod}
               onChange={(e) => setForm({ ...form, paymentMethod: e.target.value })}
               className={inputCls} placeholder="支払方法 (例: 現金)" />
