@@ -64,26 +64,24 @@ export function ScheduleTab({ tripId }: Props) {
 
   useEffect(() => { load(); }, [tripId]);
 
+  const createStartDate = form.startTime.slice(0, 10);
+
+  useEffect(() => {
+    if (!createStartDate) return;
+
+    setForm((current) => {
+      if (current.endTime.slice(0, 10) === createStartDate) return current;
+      return {
+        ...current,
+        endTime: `${createStartDate}T${current.endTime.slice(11, 16) || "00:00"}`,
+      };
+    });
+  }, [createStartDate]);
+
   async function load() {
     try { setItems(await api.schedule.list(tripId)); }
     catch { toast.error("スケジュールの取得に失敗しました"); }
     finally { setLoading(false); }
-  }
-
-  function handleCreateStartTimeChange(value: string) {
-    setForm((current) => {
-      const startDate = value.slice(0, 10);
-      const currentStartDate = current.startTime.slice(0, 10);
-      const currentEndDate = current.endTime.slice(0, 10);
-
-      return {
-        ...current,
-        startTime: value,
-        endTime: startDate && (startDate !== currentStartDate || !currentEndDate)
-          ? `${startDate}T${current.endTime.slice(11, 16) || "00:00"}`
-          : current.endTime,
-      };
-    });
   }
 
   async function handleCreate(e: React.FormEvent) {
@@ -200,9 +198,9 @@ export function ScheduleTab({ tripId }: Props) {
               className={inputCls} placeholder="場所" />
             <div className="grid grid-cols-2 gap-2">
               <DateTimePicker label="開始日時" value={form.startTime}
-                onChange={handleCreateStartTimeChange} />
+                onChange={(v) => setForm((current) => ({ ...current, startTime: v }))} />
               <DateTimePicker label="終了日時" value={form.endTime}
-                onChange={(v) => setForm({ ...form, endTime: v })} />
+                onChange={(v) => setForm((current) => ({ ...current, endTime: v }))} />
             </div>
             <input
               type="number" min="0" value={form.cost}
