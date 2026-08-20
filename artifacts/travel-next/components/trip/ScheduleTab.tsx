@@ -10,9 +10,15 @@ import { DateTimePicker } from "@/components/ui/DateTimePicker";
 interface Props { tripId: number; }
 
 const emptyForm = () => ({
-  title: "", description: "", location: "",
+  title: "", description: "", scheduleType: "", location: "",
   startTime: "", endTime: "", cost: "",
 });
+
+function toScheduleType(value: string): NonNullable<ScheduleItem["scheduleType"]> | undefined {
+  return value === "transportation" || value === "accommodation" || value === "other"
+    ? value
+    : undefined;
+}
 
 /** "2026-07-09T09:00:00Z" → "7/9" */
 function toDateLabel(iso: string) {
@@ -72,6 +78,7 @@ export function ScheduleTab({ tripId }: Props) {
       await api.schedule.create(tripId, {
         title: form.title,
         description: form.description || undefined,
+        scheduleType: toScheduleType(form.scheduleType),
         location: form.location || undefined,
         startTime: form.startTime ? new Date(form.startTime).toISOString() : undefined,
         endTime: form.endTime ? new Date(form.endTime).toISOString() : undefined,
@@ -90,6 +97,7 @@ export function ScheduleTab({ tripId }: Props) {
     setEditForm({
       title: item.title ?? "",
       description: item.description ?? "",
+      scheduleType: item.scheduleType ?? "",
       location: item.location ?? "",
       startTime: item.startTime ? new Date(item.startTime).toISOString().slice(0, 16) : "",
       endTime: item.endTime ? new Date(item.endTime).toISOString().slice(0, 16) : "",
@@ -105,6 +113,7 @@ export function ScheduleTab({ tripId }: Props) {
       await api.schedule.update(tripId, editId, {
         title: editForm.title || undefined,
         description: editForm.description || undefined,
+        scheduleType: toScheduleType(editForm.scheduleType) ?? null,
         location: editForm.location || undefined,
         startTime: editForm.startTime ? new Date(editForm.startTime).toISOString() : undefined,
         endTime: editForm.endTime ? new Date(editForm.endTime).toISOString() : undefined,
@@ -155,6 +164,16 @@ export function ScheduleTab({ tripId }: Props) {
               required value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
               className={inputCls} placeholder="タイトル（例：浅草観光）" />
+            <select
+              value={form.scheduleType}
+              onChange={(e) => setForm({ ...form, scheduleType: e.target.value })}
+              className={inputCls}
+            >
+              <option value="">種別（未分類）</option>
+              <option value="transportation">交通</option>
+              <option value="accommodation">宿泊</option>
+              <option value="other">その他</option>
+            </select>
             <input
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -227,6 +246,16 @@ export function ScheduleTab({ tripId }: Props) {
                               <input required value={editForm.title}
                                 onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
                                 className={inputCls} placeholder="タイトル" />
+                              <select
+                                value={editForm.scheduleType}
+                                onChange={(e) => setEditForm({ ...editForm, scheduleType: e.target.value })}
+                                className={inputCls}
+                              >
+                                <option value="">種別（未分類）</option>
+                                <option value="transportation">交通</option>
+                                <option value="accommodation">宿泊</option>
+                                <option value="other">その他</option>
+                              </select>
                               <input value={editForm.description}
                                 onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
                                 className={inputCls} placeholder="メモ・詳細" />
@@ -266,6 +295,12 @@ export function ScheduleTab({ tripId }: Props) {
                                   </p>
                                 )}
                                 <p className="font-medium text-sm truncate">{item.title}</p>
+                                {item.scheduleType && (
+                                  <span className="inline-block text-[11px] bg-primary/10 text-primary rounded-full px-2 py-0.5 mt-1">
+                                    {item.scheduleType === "transportation" ? "交通" :
+                                     item.scheduleType === "accommodation" ? "宿泊" : "その他"}
+                                  </span>
+                                )}
                                 {item.description && (
                                   <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{item.description}</p>
                                 )}

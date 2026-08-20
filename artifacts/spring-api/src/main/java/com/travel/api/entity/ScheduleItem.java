@@ -30,6 +30,9 @@ public class ScheduleItem {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "schedule_type", length = 32)
+    private String scheduleType;
+
     @Column(name = "location")
     private String location;
 

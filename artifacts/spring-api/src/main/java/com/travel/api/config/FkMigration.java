@@ -54,6 +54,7 @@ public class FkMigration implements ApplicationRunner {
         ensureIsCompletedColumn();
         ensureTripDateColumns();
         ensureExpenseDateIsOptional();
+        ensureScheduleTypeColumn();
         ensureChecklistTable();
     }
 
@@ -97,6 +98,14 @@ public class FkMigration implements ApplicationRunner {
             jdbc.execute("ALTER TABLE public.expense ALTER COLUMN expense_date DROP NOT NULL");
         } catch (Exception e) {
             log.warn("Failed to make expense_date optional: {}", e.getMessage());
+        }
+    }
+
+    private void ensureScheduleTypeColumn() {
+        try {
+            jdbc.execute("ALTER TABLE public.schedule_items ADD COLUMN IF NOT EXISTS schedule_type VARCHAR(32)");
+        } catch (Exception e) {
+            log.warn("Failed to ensure schedule_type column on schedule_items: {}", e.getMessage());
         }
     }
 

@@ -46,6 +46,7 @@ public class ScheduleItemController {
                 .trip(trip)
                 .title(req.getTitle())
                 .description(req.getDescription())
+                .scheduleType(req.getScheduleType())
                 .location(req.getLocation())
                 .startTime(req.getStartTime())
                 .endTime(req.getEndTime())
@@ -63,6 +64,7 @@ public class ScheduleItemController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (req.getTitle() != null) item.setTitle(req.getTitle());
         if (req.getDescription() != null) item.setDescription(req.getDescription());
+        if (req.isScheduleTypeProvided()) item.setScheduleType(req.getScheduleType());
         if (req.getLocation() != null) item.setLocation(req.getLocation());
         if (req.getStartTime() != null) item.setStartTime(req.getStartTime());
         if (req.getEndTime() != null) item.setEndTime(req.getEndTime());

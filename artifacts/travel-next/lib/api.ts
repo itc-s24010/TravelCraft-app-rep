@@ -278,6 +278,7 @@ export interface Notification {
 export interface ScheduleItem {
   scheduleId: number; tripId: number;
   title: string; description?: string; location?: string;
+  scheduleType?: "transportation" | "accommodation" | "other" | null;
   startTime?: string; endTime?: string; cost?: number;
   createdAt?: string;
 }

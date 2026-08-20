@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { api, type Transportation } from "@/lib/api";
+import { api, type ScheduleItem, type Transportation } from "@/lib/api";
 import { toast } from "sonner";
 import { PlaneLoader } from "@/components/ui/PlaneLoader";
 import { formatCurrency } from "@/lib/utils";
@@ -18,6 +18,7 @@ const emptyForm = () => ({
 
 export function TransportationTab({ tripId }: Props) {
   const [items, setItems] = useState<Transportation[]>([]);
+  const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm());
@@ -31,7 +32,14 @@ export function TransportationTab({ tripId }: Props) {
   useEffect(() => { load(); }, [tripId]);
 
   async function load() {
-    try { setItems(await api.transportation.list(tripId)); }
+    try {
+      const [transportationItems, schedules] = await Promise.all([
+        api.transportation.list(tripId),
+        api.schedule.list(tripId),
+      ]);
+      setItems(transportationItems);
+      setScheduleItems(schedules.filter((item) => item.scheduleType === "transportation"));
+    }
     catch { toast.error("交通情報の取得に失敗しました"); }
     finally { setLoading(false); }
   }
@@ -140,9 +148,7 @@ export function TransportationTab({ tripId }: Props) {
         </form>
       )}
 
-      {items.length === 0 ? (
-        <p className="text-sm text-muted-foreground text-center py-4">交通情報がありません</p>
-      ) : (
+      {items.length > 0 && (
         <div className="space-y-3">
           {items.map((item) => (
             <div key={item.transportationId} className="rounded-lg border border-border/70 bg-muted/20 overflow-hidden">
@@ -213,6 +219,40 @@ export function TransportationTab({ tripId }: Props) {
           ))}
         </div>
       )}
+
+      {scheduleItems.length > 0 ? (
+        <div className={`${items.length > 0 ? "mt-5 pt-4 border-t border-border/60" : ""}`}>
+          <p className="text-xs font-semibold text-muted-foreground mb-2">🗓️ スケジュールから</p>
+          <div className="space-y-2">
+            {scheduleItems.map((item) => (
+              <div key={item.scheduleId} className="rounded-lg border border-dashed border-primary/30 bg-primary/5 p-3 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-medium text-sm truncate">{item.title}</p>
+                  {item.description && (
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{item.description}</p>
+                  )}
+                  {item.location && (
+                    <p className="text-xs text-muted-foreground mt-0.5">📍 {item.location}</p>
+                  )}
+                  {(item.startTime || item.endTime) && (
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {item.startTime && new Date(item.startTime).toLocaleString("ja-JP")}
+                      {item.startTime && item.endTime && " → "}
+                      {item.endTime && new Date(item.endTime).toLocaleString("ja-JP")}
+                    </p>
+                  )}
+                  <p className="text-[11px] text-muted-foreground mt-1">編集・削除はスケジュールタブから</p>
+                </div>
+                {item.cost != null && (
+                  <span className="font-bold text-primary text-sm shrink-0">{formatCurrency(Number(item.cost))}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : items.length === 0 ? (
+        <p className="text-sm text-muted-foreground text-center py-4">交通情報がありません</p>
+      ) : null}
     </div>
   );
 }
