@@ -3,11 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import type { Category } from "@/lib/api";
-
-const DEFAULT_COLORS = [
-  "#f97316", "#3b82f6", "#10b981", "#a855f7",
-  "#ef4444", "#eab308", "#06b6d4", "#ec4899",
-];
+import { resolveCategoryColors } from "@/components/trip/categoryColors";
 
 const PRESET_COLORS = [
   "#f97316", "#ef4444", "#eab308", "#84cc16",
@@ -28,11 +24,6 @@ interface BudgetPieChartProps {
 
 function fmt(v: number) {
   return `¥${v.toLocaleString()}`;
-}
-
-function resolveColor(categoryId: number, index: number, categories?: Category[]): string {
-  const cat = categories?.find((c) => c.categoryId === categoryId);
-  return cat?.color ?? DEFAULT_COLORS[index % DEFAULT_COLORS.length];
 }
 
 /* ── カラーピッカーポップオーバー ── */
@@ -88,6 +79,7 @@ export function BudgetPieChart({ breakdown, categories, onColorChange }: BudgetP
 
   // 横バー用：予算のある or 支出のある全カテゴリ
   const barData = breakdown.filter((c) => c.budget > 0 || c.expense > 0);
+  const colorMap = resolveCategoryColors(breakdown, categories);
 
   // 支出のある項目だけ円グラフに使う
   const pieData = breakdown
@@ -95,7 +87,7 @@ export function BudgetPieChart({ breakdown, categories, onColorChange }: BudgetP
     .map((c, i) => ({
       name: c.categoryName,
       value: c.expense,
-      color: resolveColor(c.categoryId, i, categories),
+      color: colorMap.get(c.categoryId) ?? "#94a3b8",
     }));
 
   if (totalBudget > 0 && remaining > 0) {
@@ -169,7 +161,7 @@ export function BudgetPieChart({ breakdown, categories, onColorChange }: BudgetP
       {(barData.length > 0 || (totalBudget > 0 && remaining >= 0)) && (
         <div className="space-y-2.5">
           {barData.map((c, i) => {
-            const color = resolveColor(c.categoryId, i, categories);
+            const color = colorMap.get(c.categoryId) ?? "#94a3b8";
             const pct = c.budget > 0
               ? Math.min(100, (c.expense / c.budget) * 100)
               : c.expense > 0 ? 100 : 0;

@@ -6,8 +6,7 @@ import { formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
 import { PlaneLoader } from "@/components/ui/PlaneLoader";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
-
-const COLORS = ["#f97316","#0d9488","#8b5cf6","#ec4899","#f59e0b","#6366f1"];
+import { resolveCategoryColors } from "@/components/trip/categoryColors";
 
 interface Props {
   tripId: number;
@@ -82,11 +81,15 @@ export function BudgetTab({ tripId, categories, summary, onRefresh }: Props) {
   }
 
   const remaining = summary?.remaining ?? 0;
+  const colorMap = resolveCategoryColors(summary?.categoryBreakdown ?? [], categories);
   const chartData = [
     ...(summary?.categoryBreakdown.filter(c => c.expense > 0).map(c => ({
-      name: c.categoryName, value: c.expense, unused: false,
+      name: c.categoryName,
+      value: c.expense,
+      color: colorMap.get(c.categoryId) ?? "#94a3b8",
+      unused: false,
     })) ?? []),
-    ...(remaining > 0 ? [{ name: "残額", value: remaining, unused: true }] : []),
+    ...(remaining > 0 ? [{ name: "残額", value: remaining, color: "#e5e7eb", unused: true }] : []),
   ];
 
   const usedCategories = new Set(budgets.map((b) => b.category?.categoryId ?? b.categoryId));
@@ -108,7 +111,7 @@ export function BudgetTab({ tripId, categories, summary, onRefresh }: Props) {
                   startAngle={90} endAngle={-270}>
                   {chartData.map((entry, i) => (
                     <Cell key={i}
-                      fill={entry.unused ? "#e5e7eb" : COLORS[i % COLORS.length]}
+                      fill={entry.color}
                       stroke="none" />
                   ))}
                 </Pie>
