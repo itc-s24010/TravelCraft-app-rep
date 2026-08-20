@@ -68,6 +68,15 @@ export function ScheduleTab({ tripId, tripStartDate }: Props) {
   const createStartDate = form.startTime.slice(0, 10);
 
   useEffect(() => {
+    if (!initialDate) return;
+    setForm((current) => (
+      current.startTime || current.endTime
+        ? current
+        : { ...current, startTime: initialDate, endTime: initialDate }
+    ));
+  }, [initialDate]);
+
+  useEffect(() => {
     if (!createStartDate) return;
 
     setForm((current) => {
@@ -163,7 +172,11 @@ export function ScheduleTab({ tripId, tripStartDate }: Props) {
       <div className="flex items-center justify-between mb-5">
         <h3 className="font-semibold">タイムスケジュール</h3>
         <button
-          onClick={() => { setShowForm(true); setEditId(null); }}
+          onClick={() => {
+            if (!showForm) setForm(emptyForm(initialDate));
+            setShowForm(true);
+            setEditId(null);
+          }}
           className="text-sm px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
         >
           ＋ 追加
