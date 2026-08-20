@@ -27,23 +27,23 @@ function ClockFace({ time }: ClockFaceProps) {
 
   return (
     <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-      <circle cx="11" cy="11" r="10" stroke="rgb(var(--color-primary,99,102,241))" strokeWidth="1.5" opacity="0.35" />
+      <circle cx="11" cy="11" r="10" stroke="var(--color-primary)" strokeWidth="1.5" opacity="0.35" />
       {/* tick marks */}
       {[0,30,60,90,120,150,180,210,240,270,300,330].map((deg) => {
         const inner = toXY(deg, 8.5);
         const outer = toXY(deg, 10);
         return (
           <line key={deg} x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y}
-            stroke="rgb(var(--color-primary,99,102,241))" strokeWidth="0.8" opacity="0.3" />
+            stroke="var(--color-primary)" strokeWidth="0.8" opacity="0.3" />
         );
       })}
       {/* hour hand */}
       <line x1="11" y1="11" x2={hEnd.x} y2={hEnd.y}
-        stroke="rgb(var(--color-primary,99,102,241))" strokeWidth="2" strokeLinecap="round" />
+        stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round" />
       {/* minute hand */}
       <line x1="11" y1="11" x2={mEnd.x} y2={mEnd.y}
-        stroke="rgb(var(--color-primary,99,102,241))" strokeWidth="1.5" strokeLinecap="round" opacity="0.65" />
-      <circle cx="11" cy="11" r="1.8" fill="rgb(var(--color-primary,99,102,241))" />
+        stroke="var(--color-primary)" strokeWidth="1.5" strokeLinecap="round" opacity="0.65" />
+      <circle cx="11" cy="11" r="1.8" fill="var(--color-primary)" />
     </svg>
   );
 }
