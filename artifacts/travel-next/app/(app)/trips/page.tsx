@@ -12,6 +12,7 @@ export default function TripsPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: "", startDate: "", endDate: "", memo: "", companions: "" });
   const [saving, setSaving] = useState(false);
@@ -27,15 +28,32 @@ export default function TripsPage() {
   }, []);
 
   async function loadTrips() {
+    setLoading(true);
+    setAuthError(false);
+    setLoadError(false);
+
     try {
-      const data = await api.trips.list();
-      setTrips(data);
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "";
-      if (msg.includes("403") || msg.includes("401")) {
-        setAuthError(true);
-      } else {
-        toast.error("旅行一覧の取得に失敗しました");
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        try {
+        const data = await api.trips.list();
+        setTrips(data);
+        return;
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : "";
+          if (msg.includes("403") || msg.includes("401")) {
+            setAuthError(true);
+            return;
+          }
+
+          if (attempt === 0) {
+            await new Promise((resolve) => setTimeout(resolve, 700));
+            continue;
+          }
+
+          console.error("Failed to load trips", e);
+          setLoadError(true);
+          toast.error("旅行一覧の取得に失敗しました");
+        }
       }
     } finally {
       setLoading(false);
@@ -111,6 +129,25 @@ export default function TripsPage() {
 
   if (loading) {
     return <PlaneLoader text="旅行計画を読み込んでいます..." />;
+  }
+
+  if (loadError) {
+    return (
+      <div className="min-h-[50vh] flex flex-col items-center justify-center gap-4 text-center">
+        <div>
+          <h1 className="text-xl font-bold">旅行一覧を読み込めませんでした</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            通信状況を確認して、もう一度お試しください。
+          </p>
+        </div>
+        <button
+          onClick={loadTrips}
+          className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90"
+        >
+          もう一度試す
+        </button>
+      </div>
+    );
   }
 
   const allTrips = trips;
