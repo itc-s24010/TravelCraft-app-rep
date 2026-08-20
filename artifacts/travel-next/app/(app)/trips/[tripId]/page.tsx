@@ -75,6 +75,14 @@ export default function TripDetailPage() {
     } catch {}
   }
 
+  function handleCategoryCreated(category: Category) {
+    setCategories((previous) =>
+      previous.some((existing) => existing.categoryId === category.categoryId)
+        ? previous
+        : [...previous, category]
+    );
+  }
+
   function startEdit() {
     if (!trip) return;
     setEditForm({
@@ -532,10 +540,21 @@ export default function TripDetailPage() {
         <ScheduleTab tripId={id} tripStartDate={trip.startDate ?? trip.tripDate} />
       )}
       {activeTab === "budget" && (
-        <BudgetTab tripId={id} categories={categories} summary={summary} onRefresh={refreshSummary} />
+        <BudgetTab
+          tripId={id}
+          categories={categories}
+          summary={summary}
+          onRefresh={refreshSummary}
+          onCategoryCreated={handleCategoryCreated}
+        />
       )}
       {activeTab === "expenses" && (
-        <ExpenseTab tripId={id} categories={categories} onRefresh={refreshSummary} />
+        <ExpenseTab
+          tripId={id}
+          categories={categories}
+          onRefresh={refreshSummary}
+          onCategoryCreated={handleCategoryCreated}
+        />
       )}
       {activeTab === "transportation" && (
         <TransportationTab tripId={id} />

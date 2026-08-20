@@ -7,6 +7,7 @@ import com.travel.api.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
 import java.util.List;
 import java.util.Map;
 
@@ -21,6 +22,13 @@ public class CategoryController {
     @GetMapping
     public List<Category> getAll(@AuthenticationPrincipal UserPrincipal principal) {
         return categoryService.listForUser(userService.ensureUser(principal));
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public Category create(@AuthenticationPrincipal UserPrincipal principal,
+                            @RequestBody Map<String, String> body) {
+        return categoryService.create(body.get("categoryName"), userService.ensureUser(principal));
     }
 
     @PatchMapping("/{id}")

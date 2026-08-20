@@ -116,6 +116,11 @@ export const api = {
   },
   categories: {
     list: () => request<Category[]>("/categories"),
+    create: (categoryName: string) =>
+      request<Category>("/categories", {
+        method: "POST",
+        body: JSON.stringify({ categoryName }),
+      }),
     updateColor: (id: number, color: string | null) =>
       request<Category>(`/categories/${id}`, { method: "PATCH", body: JSON.stringify({ color }) }),
   },

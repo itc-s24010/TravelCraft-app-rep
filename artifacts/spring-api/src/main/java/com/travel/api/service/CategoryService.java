@@ -26,6 +26,20 @@ public class CategoryService {
     }
 
     @Transactional
+    public Category create(String categoryName, User user) {
+        if (categoryName == null || categoryName.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category name is required");
+        }
+
+        String normalizedName = categoryName.trim();
+        return categoryRepository.findByUserAndCategoryName(user, normalizedName)
+                .orElseGet(() -> categoryRepository.save(Category.builder()
+                        .categoryName(normalizedName)
+                        .user(user)
+                        .build()));
+    }
+
+    @Transactional
     public Category updateColor(Long categoryId, String color, User user) {
         Category cat = categoryRepository.findByCategoryIdAndUser(categoryId, user)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category not found"));

@@ -6,11 +6,19 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import { toast } from "sonner";
 import { PlaneLoader } from "@/components/ui/PlaneLoader";
 
-interface Props { tripId: number; categories: Category[]; onRefresh: () => void; }
+interface Props {
+  tripId: number;
+  categories: Category[];
+  onRefresh: () => void;
+  onCategoryCreated: (category: Category) => void;
+}
 
-const emptyForm = () => ({ categoryId: "", expenseAmount: "", expenseDate: "", paymentMethod: "", description: "" });
+const CUSTOM_CATEGORY_VALUE = "__custom__";
+const emptyForm = () => ({
+  categoryId: "", customCategoryName: "", expenseAmount: "", expenseDate: "", paymentMethod: "", description: "",
+});
 
-export function ExpenseTab({ tripId, categories, onRefresh }: Props) {
+export function ExpenseTab({ tripId, categories, onRefresh, onCategoryCreated }: Props) {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -34,8 +42,19 @@ export function ExpenseTab({ tripId, categories, onRefresh }: Props) {
     e.preventDefault();
     setSaving(true);
     try {
+      let categoryId = Number(form.categoryId);
+      if (form.categoryId === CUSTOM_CATEGORY_VALUE) {
+        const customName = form.customCategoryName.trim();
+        if (!customName) {
+          toast.error("カテゴリ名を入力してください");
+          return;
+        }
+        const category = await api.categories.create(customName);
+        categoryId = category.categoryId;
+        onCategoryCreated(category);
+      }
       await api.expenses.create(tripId, {
-        categoryId: Number(form.categoryId),
+        categoryId,
         expenseAmount: Number(form.expenseAmount),
         expenseDate: form.expenseDate || undefined,
         paymentMethod: form.paymentMethod || undefined,
@@ -56,6 +75,7 @@ export function ExpenseTab({ tripId, categories, onRefresh }: Props) {
     setEditId(expense.expenseId);
     setEditForm({
       categoryId: String(expense.category?.categoryId ?? expense.categoryId ?? ""),
+      customCategoryName: "",
       expenseAmount: String(expense.expenseAmount ?? ""),
       expenseDate: expense.expenseDate ?? "",
       paymentMethod: expense.paymentMethod ?? "",
@@ -133,7 +153,18 @@ export function ExpenseTab({ tripId, categories, onRefresh }: Props) {
               className={inputCls}>
               <option value="">カテゴリを選択</option>
               {categories.map(c => <option key={c.categoryId} value={c.categoryId}>{c.categoryName}</option>)}
+              <option value={CUSTOM_CATEGORY_VALUE}>その他（手入力）</option>
             </select>
+              {form.categoryId === CUSTOM_CATEGORY_VALUE && (
+                <input
+                  required
+                  value={form.customCategoryName}
+                  disabled={saving}
+                  onChange={(e) => setForm({ ...form, customCategoryName: e.target.value })}
+                  className={inputCls}
+                  placeholder="カテゴリ名を入力"
+                />
+              )}
             <input required type="number" min="0" step="1" value={form.expenseAmount}
               onChange={(e) => setForm({ ...form, expenseAmount: e.target.value })}
               className={inputCls} placeholder="金額 (¥)" />

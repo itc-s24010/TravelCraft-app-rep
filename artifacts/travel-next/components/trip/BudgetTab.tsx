@@ -13,13 +13,16 @@ interface Props {
   categories: Category[];
   summary: Summary | null;
   onRefresh: () => void;
+  onCategoryCreated: (category: Category) => void;
 }
 
-export function BudgetTab({ tripId, categories, summary, onRefresh }: Props) {
+const CUSTOM_CATEGORY_VALUE = "__custom__";
+
+export function BudgetTab({ tripId, categories, summary, onRefresh, onCategoryCreated }: Props) {
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ categoryId: "", budgetAmount: "" });
+  const [form, setForm] = useState({ categoryId: "", customCategoryName: "", budgetAmount: "" });
   const [saving, setSaving] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [editAmount, setEditAmount] = useState("");
@@ -40,13 +43,24 @@ export function BudgetTab({ tripId, categories, summary, onRefresh }: Props) {
     e.preventDefault();
     setSaving(true);
     try {
+      let categoryId = Number(form.categoryId);
+      if (form.categoryId === CUSTOM_CATEGORY_VALUE) {
+        const customName = form.customCategoryName.trim();
+        if (!customName) {
+          toast.error("カテゴリ名を入力してください");
+          return;
+        }
+        const category = await api.categories.create(customName);
+        categoryId = category.categoryId;
+        onCategoryCreated(category);
+      }
       await api.budget.create(tripId, {
-        categoryId: Number(form.categoryId),
+        categoryId,
         budgetAmount: Number(form.budgetAmount),
       });
       toast.success("予算を設定しました");
       setShowForm(false);
-      setForm({ categoryId: "", budgetAmount: "" });
+      setForm({ categoryId: "", customCategoryName: "", budgetAmount: "" });
       await load();
       onRefresh();
     } catch {
@@ -157,7 +171,18 @@ export function BudgetTab({ tripId, categories, summary, onRefresh }: Props) {
               {availableCategories.map(c => (
                 <option key={c.categoryId} value={c.categoryId}>{c.categoryName}</option>
               ))}
+              <option value={CUSTOM_CATEGORY_VALUE}>その他（手入力）</option>
             </select>
+            {form.categoryId === CUSTOM_CATEGORY_VALUE && (
+              <input
+                required
+                value={form.customCategoryName}
+                disabled={saving}
+                onChange={(e) => setForm({ ...form, customCategoryName: e.target.value })}
+                className="flex-1 min-w-[160px] px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
+                placeholder="カテゴリ名を入力"
+              />
+            )}
             <input required type="number" min="0" value={form.budgetAmount}
               disabled={saving}
               onChange={(e) => setForm({ ...form, budgetAmount: e.target.value })}
