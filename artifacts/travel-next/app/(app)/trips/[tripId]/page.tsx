@@ -529,7 +529,7 @@ export default function TripDetailPage() {
         </div>
       )}
       {activeTab === "schedule" && (
-        <ScheduleTab tripId={id} />
+        <ScheduleTab tripId={id} tripStartDate={trip.startDate ?? trip.tripDate} />
       )}
       {activeTab === "budget" && (
         <BudgetTab tripId={id} categories={categories} summary={summary} onRefresh={refreshSummary} />

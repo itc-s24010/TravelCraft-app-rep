@@ -7,11 +7,11 @@ import { toast } from "sonner";
 import { PlaneLoader } from "@/components/ui/PlaneLoader";
 import { DateTimePicker } from "@/components/ui/DateTimePicker";
 
-interface Props { tripId: number; }
+interface Props { tripId: number; tripStartDate?: string; }
 
-const emptyForm = () => ({
+const emptyForm = (initialDate = "") => ({
   title: "", description: "", scheduleType: "", location: "",
-  startTime: "", endTime: "", cost: "",
+  startTime: initialDate, endTime: initialDate, cost: "",
 });
 
 function toScheduleType(value: string): NonNullable<ScheduleItem["scheduleType"]> | undefined {
@@ -50,11 +50,12 @@ const DOT_COLORS = [
   "bg-pink-500", "bg-amber-500", "bg-emerald-500",
 ];
 
-export function ScheduleTab({ tripId }: Props) {
+export function ScheduleTab({ tripId, tripStartDate }: Props) {
   const [items, setItems] = useState<ScheduleItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState(emptyForm());
+  const initialDate = tripStartDate?.slice(0, 10) ?? "";
+  const [form, setForm] = useState(() => emptyForm(initialDate));
   const [saving, setSaving] = useState(false);
 
   // Edit state
@@ -100,7 +101,7 @@ export function ScheduleTab({ tripId }: Props) {
       });
       toast.success("スケジュールを追加しました");
       setShowForm(false);
-      setForm(emptyForm());
+      setForm(emptyForm(initialDate));
       await load();
     } catch { toast.error("追加に失敗しました"); }
     finally { setSaving(false); }
