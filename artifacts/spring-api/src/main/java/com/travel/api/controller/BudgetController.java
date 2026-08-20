@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -48,11 +49,16 @@ public class BudgetController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @Transactional
     public Budget create(@AuthenticationPrincipal UserPrincipal principal,
                           @PathVariable Long tripId,
                           @RequestBody BudgetRequest req) {
         User currentUser = tripAccessService.currentUser(principal);
-        Category cat = categoryService.requireOwned(req.getCategoryId(), currentUser);
+        Category cat = categoryService.requireOwnedOrCreate(
+                req.getCategoryId(),
+                req.getCustomCategoryName(),
+                currentUser
+        );
         return budgetRepository.save(Budget.builder()
                 .trip(resolveTrip(principal, tripId))
                 .user(currentUser)

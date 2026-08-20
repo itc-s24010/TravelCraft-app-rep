@@ -13,12 +13,12 @@ interface Props {
   categories: Category[];
   summary: Summary | null;
   onRefresh: () => void;
-  onCategoryCreated: (category: Category) => void;
+  onCategoriesChanged: () => Promise<void>;
 }
 
 const CUSTOM_CATEGORY_VALUE = "__custom__";
 
-export function BudgetTab({ tripId, categories, summary, onRefresh, onCategoryCreated }: Props) {
+export function BudgetTab({ tripId, categories, summary, onRefresh, onCategoriesChanged }: Props) {
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -43,28 +43,28 @@ export function BudgetTab({ tripId, categories, summary, onRefresh, onCategoryCr
     e.preventDefault();
     setSaving(true);
     try {
-      let categoryId = Number(form.categoryId);
-      if (form.categoryId === CUSTOM_CATEGORY_VALUE) {
+      const isCustomCategory = form.categoryId === CUSTOM_CATEGORY_VALUE;
+      if (isCustomCategory) {
         const customName = form.customCategoryName.trim();
         if (!customName) {
           toast.error("カテゴリ名を入力してください");
           return;
         }
-        const category = await api.categories.create(customName);
-        categoryId = category.categoryId;
-        onCategoryCreated(category);
       }
       await api.budget.create(tripId, {
-        categoryId,
+        categoryId: isCustomCategory ? undefined : Number(form.categoryId),
+        customCategoryName: isCustomCategory ? form.customCategoryName.trim() : undefined,
         budgetAmount: Number(form.budgetAmount),
       });
       toast.success("予算を設定しました");
       setShowForm(false);
       setForm({ categoryId: "", customCategoryName: "", budgetAmount: "" });
       await load();
+      if (isCustomCategory) await onCategoriesChanged();
       onRefresh();
-    } catch {
-      toast.error("予算の設定に失敗しました");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "";
+      toast.error(message ? `予算の設定に失敗しました: ${message}` : "予算の設定に失敗しました");
     } finally {
       setSaving(false);
     }

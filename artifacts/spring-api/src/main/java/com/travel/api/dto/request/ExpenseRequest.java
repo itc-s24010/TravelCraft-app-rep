@@ -7,6 +7,7 @@ import java.time.LocalDate;
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class ExpenseRequest {
     private Long categoryId;
+    private String customCategoryName;
     private BigDecimal expenseAmount;
     private LocalDate expenseDate;
     private String paymentMethod;

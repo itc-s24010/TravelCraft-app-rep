@@ -10,7 +10,7 @@ interface Props {
   tripId: number;
   categories: Category[];
   onRefresh: () => void;
-  onCategoryCreated: (category: Category) => void;
+  onCategoriesChanged: () => Promise<void>;
 }
 
 const CUSTOM_CATEGORY_VALUE = "__custom__";
@@ -18,7 +18,7 @@ const emptyForm = () => ({
   categoryId: "", customCategoryName: "", expenseAmount: "", expenseDate: "", paymentMethod: "", description: "",
 });
 
-export function ExpenseTab({ tripId, categories, onRefresh, onCategoryCreated }: Props) {
+export function ExpenseTab({ tripId, categories, onRefresh, onCategoriesChanged }: Props) {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -42,19 +42,17 @@ export function ExpenseTab({ tripId, categories, onRefresh, onCategoryCreated }:
     e.preventDefault();
     setSaving(true);
     try {
-      let categoryId = Number(form.categoryId);
-      if (form.categoryId === CUSTOM_CATEGORY_VALUE) {
+      const isCustomCategory = form.categoryId === CUSTOM_CATEGORY_VALUE;
+      if (isCustomCategory) {
         const customName = form.customCategoryName.trim();
         if (!customName) {
           toast.error("カテゴリ名を入力してください");
           return;
         }
-        const category = await api.categories.create(customName);
-        categoryId = category.categoryId;
-        onCategoryCreated(category);
       }
       await api.expenses.create(tripId, {
-        categoryId,
+        categoryId: isCustomCategory ? undefined : Number(form.categoryId),
+        customCategoryName: isCustomCategory ? form.customCategoryName.trim() : undefined,
         expenseAmount: Number(form.expenseAmount),
         expenseDate: form.expenseDate || undefined,
         paymentMethod: form.paymentMethod || undefined,
@@ -64,6 +62,7 @@ export function ExpenseTab({ tripId, categories, onRefresh, onCategoryCreated }:
       setShowForm(false);
       setForm(emptyForm());
       await load();
+      if (isCustomCategory) await onCategoriesChanged();
       onRefresh();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";

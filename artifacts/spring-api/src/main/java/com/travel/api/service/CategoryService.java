@@ -40,6 +40,17 @@ public class CategoryService {
     }
 
     @Transactional
+    public Category requireOwnedOrCreate(Long categoryId, String customCategoryName, User user) {
+        if (customCategoryName != null && !customCategoryName.isBlank()) {
+            return create(customCategoryName, user);
+        }
+        if (categoryId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category is required");
+        }
+        return requireOwned(categoryId, user);
+    }
+
+    @Transactional
     public Category updateColor(Long categoryId, String color, User user) {
         Category cat = categoryRepository.findByCategoryIdAndUser(categoryId, user)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category not found"));

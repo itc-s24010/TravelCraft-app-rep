@@ -75,12 +75,12 @@ export default function TripDetailPage() {
     } catch {}
   }
 
-  function handleCategoryCreated(category: Category) {
-    setCategories((previous) =>
-      previous.some((existing) => existing.categoryId === category.categoryId)
-        ? previous
-        : [...previous, category]
-    );
+  async function refreshCategories() {
+    try {
+      setCategories(await api.categories.list());
+    } catch {
+      toast.error("カテゴリの取得に失敗しました");
+    }
   }
 
   function startEdit() {
@@ -545,7 +545,7 @@ export default function TripDetailPage() {
           categories={categories}
           summary={summary}
           onRefresh={refreshSummary}
-          onCategoryCreated={handleCategoryCreated}
+          onCategoriesChanged={refreshCategories}
         />
       )}
       {activeTab === "expenses" && (
@@ -553,7 +553,7 @@ export default function TripDetailPage() {
           tripId={id}
           categories={categories}
           onRefresh={refreshSummary}
-          onCategoryCreated={handleCategoryCreated}
+          onCategoriesChanged={refreshCategories}
         />
       )}
       {activeTab === "transportation" && (

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -50,13 +51,15 @@ public class ExpenseController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @Transactional
     public Expense create(
             @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable Long tripId,
             @RequestBody ExpenseRequest req) {
 
-        Category cat = categoryService.requireOwned(
+        Category cat = categoryService.requireOwnedOrCreate(
                 req.getCategoryId(),
+                req.getCustomCategoryName(),
                 tripAccessService.currentUser(principal)
         );
 

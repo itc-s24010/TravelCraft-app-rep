@@ -6,5 +6,6 @@ import java.math.BigDecimal;
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class BudgetRequest {
     private Long categoryId;
+    private String customCategoryName;
     private BigDecimal budgetAmount;
 }

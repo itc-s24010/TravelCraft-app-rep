@@ -173,7 +173,7 @@ export const api = {
   },
   budget: {
     list: (tripId: number) => request<Budget[]>(`/trips/${tripId}/budget`),
-    create: (tripId: number, data: Partial<Budget>) =>
+    create: (tripId: number, data: BudgetInput) =>
       request<Budget>(`/trips/${tripId}/budget`, {
         method: "POST", body: JSON.stringify(data),
       }),
@@ -186,7 +186,7 @@ export const api = {
   },
   expenses: {
     list: (tripId: number) => request<Expense[]>(`/trips/${tripId}/expenses`),
-    create: (tripId: number, data: Partial<Expense>) =>
+    create: (tripId: number, data: ExpenseInput) =>
       request<Expense>(`/trips/${tripId}/expenses`, {
         method: "POST", body: JSON.stringify(data),
       }),
@@ -276,6 +276,8 @@ export interface Expense {
   description?: string;
   category?: Category;
 }
+export type BudgetInput = Partial<Budget> & { customCategoryName?: string };
+export type ExpenseInput = Partial<Expense> & { customCategoryName?: string };
 export interface Notification {
   notificationId: number; tripId: number;
   reminder?: string; notificationDatetime?: string; notificationType?: string;
