@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 interface ClockFaceProps { time: string; }
 
 function ClockFace({ time }: ClockFaceProps) {
@@ -54,10 +56,23 @@ interface DateTimePickerProps {
 }
 
 const QUICK_TIMES = ["06:00", "08:00", "09:00", "12:00", "15:00", "18:00", "20:00", "22:00"];
+const HOURS = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, "0"));
+const MINUTES = Array.from({ length: 12 }, (_, index) => String(index * 5).padStart(2, "0"));
 
 export function DateTimePicker({ value, onChange, label, className }: DateTimePickerProps) {
+  const [timePickerOpen, setTimePickerOpen] = useState(false);
+  const [timePickerStep, setTimePickerStep] = useState<"hour" | "minute">("hour");
+  const [selectedHour, setSelectedHour] = useState("09");
   const datePart = value ? value.slice(0, 10) : "";
   const timePart = value ? value.slice(11, 16) : "";
+
+  function todayDate() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
 
   function handleDate(d: string) {
     if (!d) { onChange(""); return; }
@@ -65,7 +80,20 @@ export function DateTimePicker({ value, onChange, label, className }: DateTimePi
   }
   function handleTime(t: string) {
     if (!t) { onChange(datePart ? datePart + "T00:00" : ""); return; }
-    onChange((datePart || new Date().toISOString().slice(0, 10)) + "T" + t);
+    onChange((datePart || todayDate()) + "T" + t);
+  }
+  function openTimePicker() {
+    setSelectedHour(timePart ? timePart.slice(0, 2) : "09");
+    setTimePickerStep("hour");
+    setTimePickerOpen(true);
+  }
+  function selectHour(hour: string) {
+    setSelectedHour(hour);
+    setTimePickerStep("minute");
+  }
+  function selectMinute(minute: string) {
+    handleTime(`${selectedHour}:${minute}`);
+    setTimePickerOpen(false);
   }
 
   return (
@@ -84,9 +112,15 @@ export function DateTimePicker({ value, onChange, label, className }: DateTimePi
         </div>
         {/* Time row */}
         <div className="flex items-center gap-2.5 px-3 py-2 bg-primary/[0.03]">
-          <div className="shrink-0">
+          <button
+            type="button"
+            onClick={openTimePicker}
+            aria-label="時計で時間を設定"
+            title="時計で時間を設定"
+            className="shrink-0 rounded-full hover:bg-primary/10 focus:outline-none focus:ring-2 focus:ring-primary/40"
+          >
             <ClockFace time={timePart} />
-          </div>
+          </button>
           <input
             type="time"
             value={timePart}
@@ -94,6 +128,59 @@ export function DateTimePicker({ value, onChange, label, className }: DateTimePi
             className="flex-1 text-sm font-semibold font-mono text-primary bg-transparent focus:outline-none min-w-0 tracking-wider"
           />
         </div>
+        {timePickerOpen && (
+          <div className="border-t border-border/70 bg-muted/20 p-3">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-semibold">
+                {timePickerStep === "hour" ? "時間を選択" : `${selectedHour}時の分を選択`}
+              </p>
+              {timePickerStep === "minute" && (
+                <button
+                  type="button"
+                  onClick={() => setTimePickerStep("hour")}
+                  className="text-xs text-primary hover:underline"
+                >
+                  時間に戻る
+                </button>
+              )}
+            </div>
+            {timePickerStep === "hour" ? (
+              <div className="grid grid-cols-6 gap-1.5">
+                {HOURS.map((hour) => (
+                  <button
+                    key={hour}
+                    type="button"
+                    onClick={() => selectHour(hour)}
+                    className={`rounded-md border py-1.5 text-xs font-medium transition-colors ${
+                      timePart.slice(0, 2) === hour
+                        ? "border-primary bg-primary text-white"
+                        : "border-border bg-white text-muted-foreground hover:border-primary/50 hover:text-primary"
+                    }`}
+                  >
+                    {hour}時
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-4 gap-1.5">
+                {MINUTES.map((minute) => (
+                  <button
+                    key={minute}
+                    type="button"
+                    onClick={() => selectMinute(minute)}
+                    className={`rounded-md border py-2 text-sm font-medium transition-colors ${
+                      timePart.slice(3, 5) === minute
+                        ? "border-primary bg-primary text-white"
+                        : "border-border bg-white text-muted-foreground hover:border-primary/50 hover:text-primary"
+                    }`}
+                  >
+                    {minute}分
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         <div className="flex flex-wrap gap-1.5 px-3 pb-2.5">
           <span className="w-full text-[10px] text-muted-foreground">よく使う時刻</span>
           {QUICK_TIMES.map((time) => (
