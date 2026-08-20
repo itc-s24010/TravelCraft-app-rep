@@ -53,6 +53,8 @@ interface DateTimePickerProps {
   className?: string;
 }
 
+const QUICK_TIMES = ["06:00", "08:00", "09:00", "12:00", "15:00", "18:00", "20:00", "22:00"];
+
 export function DateTimePicker({ value, onChange, label, className }: DateTimePickerProps) {
   const datePart = value ? value.slice(0, 10) : "";
   const timePart = value ? value.slice(11, 16) : "";
@@ -91,6 +93,24 @@ export function DateTimePicker({ value, onChange, label, className }: DateTimePi
             onChange={(e) => handleTime(e.target.value)}
             className="flex-1 text-sm font-semibold font-mono text-primary bg-transparent focus:outline-none min-w-0 tracking-wider"
           />
+        </div>
+        <div className="flex flex-wrap gap-1.5 px-3 pb-2.5">
+          <span className="w-full text-[10px] text-muted-foreground">よく使う時刻</span>
+          {QUICK_TIMES.map((time) => (
+            <button
+              key={time}
+              type="button"
+              onClick={() => handleTime(time)}
+              aria-label={`${time}を選択`}
+              className={`rounded-md border px-2 py-1 text-xs font-medium transition-colors ${
+                timePart === time
+                  ? "border-primary bg-primary text-white"
+                  : "border-border bg-white text-muted-foreground hover:border-primary/50 hover:text-primary"
+              }`}
+            >
+              {time}
+            </button>
+          ))}
         </div>
       </div>
     </div>
